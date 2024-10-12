@@ -1,12 +1,12 @@
 ﻿namespace Markdown.Core.AST;
 
-public interface INode
+public interface ISyntaxNode
 {
     NodeType Type { get; }
-    IEnumerable<INode> Children { get; }
-    string Content {  get; }
+    List<ISyntaxNode> Childrens { get; }
+    /*string Content {  get; }*/
 
-    void AddChildren(INode node);
+    void AddChildren(ISyntaxNode node);
 }
 
 public enum NodeType

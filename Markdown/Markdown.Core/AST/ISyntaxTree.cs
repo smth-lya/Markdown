@@ -1,6 +1,6 @@
 ﻿namespace Markdown.Core.AST;
 
-public interface ISyntaxTree : IEnumerable<INode>
+public interface ISyntaxTree : IEnumerable<ISyntaxNode>
 {
-    INode Root { get; }
+    ISyntaxNode Root { get; }
 }
