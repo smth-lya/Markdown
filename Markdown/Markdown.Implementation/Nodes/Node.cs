@@ -1,18 +1,16 @@
 ﻿using Markdown.Core.AST;
 using Markdown.Core.Renders;
-using Markdown.Implementation.Node;
+using Markdown.Implementation.Nodes;
 using Markdown.Implementation.Parsers;
-using Markdown.Implementation.Renders;
 using System.Diagnostics;
 using System.Xml.Linq;
 
-namespace Markdown.Implementation.Node
+namespace Markdown.Implementation.Nodes
 {
-    public class Node : ISyntaxNode, IRenderer
+    public abstract class Node : ISyntaxNode, IRenderer
     {
         public NodeType Type { get; private set; }
-
-        public List<ISyntaxNode> Childrens { get; private set; }
+        public List<ISyntaxNode> Childrens { get; init; }
 
         public Node()
         {
@@ -26,7 +24,7 @@ namespace Markdown.Implementation.Node
 
         public virtual string Render()
         {
-            return string.Join(' ', Childrens.Cast<Node>().Select(node => node.Render()));
+            return string.Join("", Childrens.Cast<Node>().Select(node => node.Render()));
         }
     }
 }
@@ -43,19 +41,22 @@ public class HeaderNode : Node
     {
         return $"<h{Level}>{base.Render()}</h{Level}>";
     }
+
+    public override string ToString()
+    {
+        return new string('#', Level);
+    }
 }
 public class EmphasisNode : Node
 {
-    public string Text { get; }
-
-    public EmphasisNode(string text)
-    {
-        Text = text;
-    }
-
     public override string Render()
     {
         return $"<em>{base.Render()}</em>";
+    }
+
+    public override string ToString()
+    {
+        return "*";
     }
 }
 public class StrongNode : Node
@@ -64,12 +65,22 @@ public class StrongNode : Node
     {
         return $"<strong>{base.Render()}</strong>";
     }
+
+    public override string ToString()
+    {
+        return "**";
+    }
 }
 public class ParagraphNode : Node
 {
     public override string Render()
     {
-        return $"<p>{base.Render()}</p>";
+        return $"{base.Render()}";
+    }
+
+    public override string ToString()
+    {
+        return string.Empty;
     }
 }
 
@@ -94,6 +105,11 @@ public class TextNode : Node
     private string? GetDebuggerDisplay()
     {
         return ToString();
+    }
+
+    public override string ToString()
+    {
+        return Content;
     }
 }
 
