@@ -14,7 +14,7 @@ public class MarkdownProcessorTests
         var expected = "Текст, <em>окруженный с двух сторон</em> одинарными символами подчерка";
 
         // Act
-        _processor.TryConvertToHtml(input, out var result);
+        _processor.ConvertToHtml(input, out var result);
 
         // Assert
         Assert.Equal(expected, result);
@@ -28,7 +28,7 @@ public class MarkdownProcessorTests
         var expected = "<strong>Текст выделенный двумя символами</strong>";
 
         // Act
-         _processor.TryConvertToHtml(input, out var result);
+         _processor.ConvertToHtml(input, out var result);
 
         // Assert
         Assert.Equal(expected, result);
@@ -42,7 +42,7 @@ public class MarkdownProcessorTests
         var expected = "_Экранированный текст_ не должен выделяться курсивом";
 
         // Act
-         _processor.TryConvertToHtml(input, out var result);
+         _processor.ConvertToHtml(input, out var result);
 
         // Assert
         Assert.Equal(expected, result);
@@ -56,7 +56,7 @@ public class MarkdownProcessorTests
         var expected = @"Здесь сим\волы экранирования\ \должны остаться.";
 
         // Act
-         _processor.TryConvertToHtml(input, out var result);
+         _processor.ConvertToHtml(input, out var result);
 
         // Assert
         Assert.Equal(expected, result);
@@ -67,10 +67,10 @@ public class MarkdownProcessorTests
     {
         // Arrange
         var input = @"\\_Это выделится курсивом_";
-        var expected = "<em>Это выделится курсивом</em>";
+        var expected = "\\<em>Это выделится курсивом</em>";
 
         // Act
-         _processor.TryConvertToHtml(input, out var result);
+         _processor.ConvertToHtml(input, out var result);
 
         // Assert
         Assert.Equal(expected, result);
@@ -84,7 +84,7 @@ public class MarkdownProcessorTests
         var expected = "<strong>Полужирный и <em>курсив</em> внутри</strong>";
 
         // Act
-         _processor.TryConvertToHtml(input, out var result);
+         _processor.ConvertToHtml(input, out var result);
 
         // Assert
         Assert.Equal(expected, result);
@@ -95,10 +95,10 @@ public class MarkdownProcessorTests
     {
         // Arrange
         var input = "_Курсив и __полужирный внутри__ не работают_";
-        var expected = "<em>Курсив и полужирный внутри не работают</em>";
+        var expected = "<em>Курсив и __полужирный внутри__ не работают</em>";
 
         // Act
-         _processor.TryConvertToHtml(input, out var result);
+         _processor.ConvertToHtml(input, out var result);
 
         // Assert
         Assert.Equal(expected, result);
@@ -112,7 +112,7 @@ public class MarkdownProcessorTests
         var expected = "Текст с цифрами_12_3";
 
         // Act
-         _processor.TryConvertToHtml(input, out var result);
+         _processor.ConvertToHtml(input, out var result);
 
         // Assert
         Assert.Equal(expected, result);
@@ -126,7 +126,7 @@ public class MarkdownProcessorTests
         var expected = "Выделение в <em>нач</em>але и сер<em>еди</em>не";
 
         // Act
-         _processor.TryConvertToHtml(input, out var result);
+         _processor.ConvertToHtml(input, out var result);
 
         // Assert
         Assert.Equal(expected, result);
@@ -140,7 +140,7 @@ public class MarkdownProcessorTests
         var expected = "Это непарные_ символы";
 
         // Act
-         _processor.TryConvertToHtml(input, out var result);
+         _processor.ConvertToHtml(input, out var result);
 
         // Assert
         Assert.Equal(expected, result);
@@ -152,7 +152,7 @@ public class MarkdownProcessorTests
         // Arrange
         var input = "# Это заголовок";
         var expected = "<h1>Это заголовок</h1>";// Act
-         _processor.TryConvertToHtml(input, out var result);
+         _processor.ConvertToHtml(input, out var result);
 
         // Assert
         Assert.Equal(expected, result);
@@ -166,7 +166,7 @@ public class MarkdownProcessorTests
         var expected = "<h1>Заголовок с <em>разными</em> символами</h1>";
 
         // Act
-         _processor.TryConvertToHtml(input, out var result);
+         _processor.ConvertToHtml(input, out var result);
 
         // Assert
         Assert.Equal(expected, result);
@@ -180,7 +180,7 @@ public class MarkdownProcessorTests
         var expected = "____";
 
         // Act
-         _processor.TryConvertToHtml(input, out var result);
+         _processor.ConvertToHtml(input, out var result);
 
         // Assert
         Assert.Equal(expected, result);
@@ -190,11 +190,11 @@ public class MarkdownProcessorTests
     public void MixedBoldAndItalics_ShouldNotBeFormatted()
     {
         // Arrange
-        var input = "пересечение _двойных и одинарных_ подчерков";
-        var expected = "пересечение _двойных и одинарных_ подчерков";
+        var input = "пересечение __двойных и одинарных_ подчерков";
+        var expected = "пересечение __двойных и одинарных_ подчерков";
 
         // Act
-         _processor.TryConvertToHtml(input, out var result);
+         _processor.ConvertToHtml(input, out var result);
 
         // Assert
         Assert.Equal(expected, result);

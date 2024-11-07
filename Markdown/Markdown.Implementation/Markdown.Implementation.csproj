@@ -10,8 +10,4 @@
     <ProjectReference Include="..\Markdown.Core\Markdown.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Renders\" />
-  </ItemGroup>
-
 </Project>

@@ -1,20 +1,33 @@
-﻿namespace Markdown.Core.AST;
+﻿using Markdown.Core.Renders;
 
-public interface ISyntaxNode
+namespace Markdown.Core.AST;
+
+public interface ISyntaxNode : IRenderer
 {
-    NodeType Type { get; }
-    List<ISyntaxNode> Childrens { get; }
-    /*string Content {  get; }*/
+    /// <summary>
+    /// Определяет, открыт ли текущий тег.
+    /// </summary>
+    /// 
+    /// <returns> 
+    /// true, если тег открыт и ожидает закрытия,
+    /// что позволяет обработчику добавлять соответствующий закрывающий тег.
+    /// </returns>
+    bool IsOpen { get; }
 
-    void AddChildren(ISyntaxNode node);
-}
+    /// <summary>
+    /// Указывает, является ли текущий тег самозакрывающимся.
+    /// </summary>
+    /// 
+    /// <returns> 
+    /// Если true, обработка не требует добавления закрывающего тега в стеке.
+    /// </returns>
+    bool IsSelfClosing { get; }
 
-public enum NodeType
-{
-    Text,
-    Emphasis,     // <em>
-    Strong,       // <strong>
-    Heading,      // <h1>, <h2>,
-    Paragraph,
-    EscapeSymbol,
+    IReadOnlyList<ISyntaxNode> Childrens { get; }
+
+    void AddChildrenFirst(ISyntaxNode node);
+    void AddChildrensFirst(IEnumerable<ISyntaxNode> nodes);
+
+    void AddChildrenLast(ISyntaxNode node);
+    void AddChildrensLast(IEnumerable<ISyntaxNode> nodes);
 }

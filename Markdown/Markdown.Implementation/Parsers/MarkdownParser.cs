@@ -14,85 +14,84 @@ namespace Markdown.Implementation.Parsers
 
             foreach (var line in sourceMD.Split('\n'))
             {
+                var lineSpan = line.AsSpan(); 
+
                 var level = 0;
                 var i = 0;
-                while (i < line.Length && line[i] == '#')
+
+                while (i < line.Length && level <= 5 && line[i] == '#')
                 {
                     level++;
                     i++;
                 }
 
-                if (level > 0 && i < line.Length && line[i] == ' ')
+                if (level > 0 && level <= 5 && i < lineSpan.Length && line[i] == ' ')
                 {
                     syntaxTree.ProcessNode(new HeaderNode(level));
-                    ProcessLine(line.Substring(i + 1), syntaxTree);
-                    
+                    ProcessLine(lineSpan[(i + 1)..], syntaxTree);
+                   
                     syntaxTree.CloseUnmatchedNodesAsText();
+                    
                     continue;
                 }
 
-                // Обработка остальных строк
-                ProcessLine(line, syntaxTree);
+                ProcessLine(lineSpan, syntaxTree);
                 syntaxTree.CloseUnmatchedNodesAsText();
             }
 
             return syntaxTree;
         }
 
-        private void ProcessLine(string line, in SyntaxTree syntaxTree)
+        private void ProcessLine(ReadOnlySpan<char> line, in SyntaxTree syntaxTree)
         {
-            var sb = new StringBuilder();
             var position = 0;
 
-            for (var i = 0; i < line.Length;)
+            while (position < line.Length)
             {
-                if (line[i] == '\\') // Экранирование
-                {
-                    if (i + 1 < line.Length && (line[i + 1] == '_' || line[i + 1] == '\\'))
-                    {
-                        sb.Append(line[i + 1]);
-                        i += 2;
-                    }
-                    else
-                    {
-                        sb.Append(line[i]);
-                        i++;
-                    }
-                    continue;
-                }
+                var currentChar = line[position];
 
-                if (line[i] == '_' && i + 1 < line.Length && line[i + 1] == '_') // Полужирный
-                {
-                    if (i - position > 0)
-                        syntaxTree.ProcessNode(new TextNode(line.Substring(position, i - position)));
-
-                    syntaxTree.ProcessNode(new StrongNode());
-                    i += 2;
-                    position = i;
-                }
-                else if (line[i] == '_') // Курсив
-                {
-                    if (i - position > 0)
-                        syntaxTree.ProcessNode(new TextNode(line.Substring(position, i - position)));
-
-                    syntaxTree.ProcessNode(new EmphasisNode());
-                    i++;
-                    position = i;
-                }
-                else if (char.IsWhiteSpace(line[i]) || char.IsDigit(line[i])) // Пробелы или цифры внутри подчерков не должны выделяться
-                {
-                    sb.Append(line[i]);
-                    i++;
-                }
+                if (currentChar == '\\')
+                    ProcessEscapeSequence(ref position, line, syntaxTree);
+                else if (currentChar == '_')
+                    ProcessUnderscoreSequence(ref position, line, syntaxTree);
                 else
                 {
-                    sb.Append(line[i]);
-                    i++;
+                    int textEnd = position;
+
+                    while (textEnd < line.Length && line[textEnd] != '\\' && line[textEnd] != '_')
+                        textEnd++;
+
+                    syntaxTree.ProcessNode(new TextNode(line.Slice(position, textEnd - position)));
+                    position = textEnd;
                 }
             }
+        }
 
-            if (position < line.Length)
-                syntaxTree.ProcessNode(new TextNode(sb.ToString()));
+        private void ProcessEscapeSequence(ref int position, ReadOnlySpan<char> line, in SyntaxTree syntaxTree)
+        {
+            if (position + 1 < line.Length && (line[position + 1] == '_' || line[position + 1] == '\\'))
+            {
+                syntaxTree.ProcessNode(new TextNode(line.Slice(position + 1, 1)));
+                position += 2;
+
+                return;
+            }
+
+            syntaxTree.ProcessNode(new TextNode(line.Slice(position, 1)));
+            position++;
+        }
+        private void ProcessUnderscoreSequence(ref int position, ReadOnlySpan<char> line, in SyntaxTree syntaxTree)
+        {
+            if (position + 1 < line.Length && line[position + 1] == '_')
+            {
+                syntaxTree.ProcessNode(new StrongNode());
+                position += 2;
+
+                return;
+            }
+
+            syntaxTree.ProcessNode(new EmphasisNode());
+            position++;
         }
     }
 }

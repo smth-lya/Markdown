@@ -1,4 +1,5 @@
 ﻿using Markdown.Core.AST;
+using Markdown.Core.Renders;
 using Markdown.Implementation.Nodes;
 using System.Collections;
 using System.Text;
@@ -7,13 +8,9 @@ namespace Markdown.Implementation.AST
 {
     public class SyntaxTree : ISyntaxTree
     {
-        public ISyntaxNode Root { get; }
-        private readonly Stack<Node> _openNodes = new();
+        public ISyntaxNode Root { get; } = new BlankNode();
 
-        public SyntaxTree()
-        {
-            Root = new ParagraphNode();
-        }
+        private readonly Stack<ISyntaxNode> _openNodes = new();
 
         /// <summary>
         /// Метод для обработки узлов. Определяет, нужно ли завершить узел или добавить новый.
@@ -29,26 +26,6 @@ namespace Markdown.Implementation.AST
         }
 
         /// <summary>
-        /// Завершает все оставшиеся незакрытые ноды и превращает их в текстовые.
-        /// </summary>
-        public void CloseUnmatchedNodesAsText()
-        {
-            var sb = new StringBuilder();
-
-            while (_openNodes.Count > 0)
-            {
-                var node = _openNodes.Pop();
-
-                if (node.Childrens.Count != 0)
-                    (Root as ParagraphNode)?.AddChildren(node);
-                else
-                    (Root as ParagraphNode)?.AddChildren(new TextNode(node.ToString()));
-            }
-
-            (Root as ParagraphNode)?.Childrens.Reverse();
-        }
-
-        /// <summary>
         /// Проверяет, есть ли в стеке нода того же типа, и закрывает её вместе с промежуточными нодами.
         /// Превращает промежуточные ноды в текст и добавляет их к закрывающейся ноде.
         /// </summary>
@@ -61,21 +38,44 @@ namespace Markdown.Implementation.AST
             if (nodeIndex == -1)
                 return false;
 
-            var sb = new StringBuilder();
-            var collectedNodes = new List<Node>();
+            var list = new List<ISyntaxNode>() { new TextNode(string.Empty) };
 
             for (int i = 0; i < nodeIndex; i++)
             {
                 var currentNode = _openNodes.Pop();
-                sb.Insert(0, currentNode.Render());
-                collectedNodes.Add(currentNode);
+                list.Add(currentNode);
             }
 
-            var textNode = new TextNode(sb.ToString());
-
-            _openNodes.Peek().AddChildren(textNode);
+            _openNodes.Peek().AddChildrensFirst(list);
             
             return true;
+        }   
+        private void AddNode(Node node)
+            => _openNodes.Push(node);
+
+        /// <summary>
+        /// Завершает все оставшиеся незакрытые ноды и превращает их в текстовые.
+        /// </summary>
+        public void CloseUnmatchedNodesAsText()
+        {
+            ISyntaxNode node = new BlankNode();
+
+            while (_openNodes.Count > 0)
+            {
+                var popedNode = _openNodes.Pop();
+
+                if (popedNode.IsSelfClosing && popedNode is not TextNode)
+                {
+                    popedNode.AddChildrensLast(node.Childrens);
+                    node = popedNode;
+
+                    continue;
+                }
+
+                node.AddChildrenFirst(popedNode);
+            }
+
+            Root.AddChildrenFirst(node);
         }
 
         /// <summary>
@@ -85,32 +85,17 @@ namespace Markdown.Implementation.AST
         /// <returns>Индекс ноды или -1, если нода не найдена</returns>
         private int FindOpenNodeIndex(Node node)
         {
-            if (node.GetType() == typeof(TextNode))
+            if (node.IsSelfClosing)
                 return -1;
 
             var index = 0;
             foreach (var openNode in _openNodes)
             {
-                if (openNode.Childrens.Count == 0 && openNode.GetType() == node.GetType())
+                if (openNode.IsOpen && !openNode.IsSelfClosing && openNode.GetType() == node.GetType())
                     return index;
                 index++;
             }
             return -1;
-        }
-
-        private void AddNode(Node node)
-        {
-            _openNodes.Push(node);
-        }
-
-        public IEnumerator<ISyntaxNode> GetEnumerator()
-        {
-            yield return Root;
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
     }
 }
