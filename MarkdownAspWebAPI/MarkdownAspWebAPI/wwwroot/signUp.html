@@ -1,0 +1,202 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        body {
+            background: radial-gradient(circle, #2a2a2a, #000000);
+            color: #ffffff;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            background: rgba(30, 30, 30, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            animation: fadeIn 1s ease-in-out;
+            position: relative;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            position: relative;
+            width: 100%;
+        }
+
+            .input-group i {
+                position: absolute;
+                left: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #aaa;
+                font-size: 16px;
+            }
+
+        label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 5px;
+            text-align: left;
+        }
+
+        input {
+            width: calc(100% - 40px);
+            padding: 12px 12px 12px 40px;
+            border: none;
+            border-radius: 5px;
+            background: #333;
+            color: #ffffff;
+            font-size: 14px;
+            transition: background 0.3s ease-in-out;
+            outline: none;
+            display: block;
+        }
+
+            input:focus {
+                background: #444;
+                box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+            }
+
+        .validation-list {
+            list-style: none;
+            padding: 0;
+            font-size: 12px;
+            color: #ff4d4d;
+            text-align: left;
+        }
+
+            .validation-list li {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                transition: color 0.3s ease-in-out;
+            }
+
+        .valid {
+            color: #4caf50 !important;
+        }
+
+        .checkmark {
+            width: 10px;
+            height: 10px;
+            background: #ff4d4d;
+            border-radius: 50%;
+            transition: background 0.3s ease-in-out;
+        }
+
+        .valid .checkmark {
+            background: #4caf50;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            background: linear-gradient(45deg, #ff0099, #4933ff);
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s ease-in-out;
+        }
+
+            button:hover {
+                transform: scale(1.05);
+            }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form class="register-form" id="registerForm">
+            <h2>Регистрация</h2>
+            <div class="input-group">
+                <i class="fas fa-envelope"></i>
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="Введите email" required>
+                <ul class="validation-list" id="emailValidation">
+                    <li><span class="checkmark"></span> Должен содержать @</li>
+                    <li><span class="checkmark"></span> Должен содержать . (точку)</li>
+                </ul>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <label for="password">Пароль</label>
+                <input type="password" id="password" placeholder="Введите пароль" required>
+                <ul class="validation-list" id="passwordValidation">
+                    <li><span class="checkmark"></span> Минимум 8 символов</li>
+                    <li><span class="checkmark"></span> Заглавная буква</li>
+                    <li><span class="checkmark"></span> Цифра</li>
+                    <li><span class="checkmark"></span> Спецсимвол (!@#$%^&*)</li>
+                </ul>
+            </div>
+            <button type="submit">
+                <i class="fas fa-user-plus"></i> Зарегистрироваться
+            </button>
+
+        </form>
+    </div>
+    <script>
+        function validateField(input, checks, validationList) {
+            checks.forEach((check, index) => {
+                let element = validationList.children[index];
+                if (check.regex.test(input.value)) {
+                    element.classList.add("valid");
+                } else {
+                    element.classList.remove("valid");
+                }
+            });
+        }
+
+        document.getElementById("password").addEventListener("input", function () {
+            validateField(this, [
+                { regex: /.{8,}/ },
+                { regex: /[A-Z]/ },
+                { regex: /\d/ },
+                { regex: /[!@#$%^&*]/ }
+            ], document.getElementById("passwordValidation"));
+        });
+
+        document.getElementById("email").addEventListener("input", function () {
+            validateField(this, [
+                { regex: /@/ },
+                { regex: /\./ }
+            ], document.getElementById("emailValidation"));
+        });
+    </script>
+</body>
+</html>

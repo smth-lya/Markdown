@@ -1,0 +1,154 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Manager & Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #121212; /* темный фон */
+            color: #e0e0e0; /* светлый текст для контраста */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .title {
+            font-size: 1.8rem;
+            color: #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #a0a0a0;
+            margin-bottom: 40px;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        .button {
+            width: 150px;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #444444;
+            border-radius: 10px;
+            background: #222222; /* темный серый фон кнопок */
+            box-shadow: 2px 2px 5px #000000, -2px -2px 5px #333333; /* тени */
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+            .button:hover {
+                transform: scale(1.05);
+                box-shadow: 3px 3px 8px #000000, -3px -3px 8px #444444; /* усиленные тени при наведении */
+            }
+
+        .icon {
+            font-size: 3rem;
+            color: #888888; /* темные серые иконки */
+        }
+
+        .file-icon {
+            color: #bbbbbb; /* светлый серый цвет иконки для хранилища */
+        }
+
+        .add-icon {
+            color: #bbbbbb; /* серый цвет для кнопки добавления */
+        }
+
+        .settings {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .settings-icon {
+            font-size: 1.5rem;
+            color: #666666; /* серые иконки */
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+            .settings-icon:hover {
+                color: #bbbbbb; /* светлее при наведении */
+            }
+
+        .button-text {
+            margin-top: 10px;
+            font-size: 1rem;
+            color: #a0a0a0; /* светлый серый текст */
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        footer {
+            margin-top: 40px;
+            font-size: 0.9rem;
+            color: #555555;
+        }
+
+            footer a {
+                color: #888888;
+                text-decoration: none;
+            }
+
+                footer a:hover {
+                    color: #bbbbbb;
+                }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">File Manager & Converter</div>
+        <div class="subtitle">Easily manage your files and convert Markdown to HTML</div>
+        <div class="button-container">
+            <a href="/file-storage">
+                <div class="button">
+                    <div class="icon file-icon">&#128193;</div>
+                    <div class="button-text">File Storage</div>
+                </div>
+            </a>
+            <a href="/md-converter">
+                <div class="button">
+                    <div class="icon add-icon">&#43;</div>
+                    <div class="button-text">New File</div>
+                </div>
+            </a>
+        </div>
+        <div class="settings">
+            <div class="settings-icon" title="Settings">&#9881;</div>
+            <div class="settings-icon" title="Help">&#10067;</div>
+        </div>
+    </div>
+    <footer>
+        <p>© 2025 File Manager. <a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Service</a></p>
+    </footer>
+</body>
+</html>

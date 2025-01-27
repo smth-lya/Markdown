@@ -1,0 +1,244 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to HTML Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: #1e1e1e;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333333;
+        }
+
+            header h1 {
+                font-size: 1.5rem;
+                margin-right: 20px;
+            }
+
+            header .button {
+                padding: 10px 15px;
+                background-color: #222222;
+                border: 1px solid #444444;
+                border-radius: 5px;
+                cursor: pointer;
+                color: #bbbbbb;
+                transition: background-color 0.2s ease, color 0.2s ease;
+            }
+
+                header .button:hover {
+                    background-color: #333333;
+                    color: #ffffff;
+                }
+
+        main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            flex-wrap: wrap;
+            padding: 20px;
+        }
+
+        .editor, .preview {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            margin: 10px;
+            max-width: 48%;
+        }
+
+        .editor {
+            background-color: #1e1e1e;
+            border-radius: 5px;
+            border-right: 1px solid #333333;
+        }
+
+        .preview {
+            background-color: #222222;
+            border-radius: 5px;
+            max-width: 48%;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100%;
+            background: #1e1e1e;
+            border: none;
+            color: #e0e0e0;
+            font-size: 1rem;
+            font-family: 'Courier New', Courier, monospace;
+            resize: none;
+            outline: none;
+            padding: 15px;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background-color: #1e1e1e;
+            border-bottom: 1px solid #333333;
+        }
+
+            .toolbar .button {
+                padding: 8px 12px;
+                background-color: #222222;
+                border: 1px solid #444444;
+                border-radius: 5px;
+                cursor: pointer;
+                color: #bbbbbb;
+                transition: background-color 0.2s ease, color 0.2s ease;
+            }
+
+                .toolbar .button:hover {
+                    background-color: #333333;
+                    color: #ffffff;
+                }
+
+            .toolbar .right {
+                display: flex;
+                gap: 10px;
+            }
+
+        .auth-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .auth-container input {
+                padding: 8px;
+                background-color: #1e1e1e;
+                border: 1px solid #444444;
+                border-radius: 5px;
+                color: #bbbbbb;
+                outline: none;
+            }
+
+        footer {
+            background-color: #1e1e1e;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.9rem;
+            color: #555555;
+            border-top: 1px solid #333333;
+        }
+
+            footer a {
+                color: #888888;
+                text-decoration: none;
+            }
+
+                footer a:hover {
+                    color: #bbbbbb;
+                }
+
+        @media (max-width: 768px) {
+            .editor, .preview {
+                max-width: 100%;
+                margin: 10px 0;
+            }
+        }
+    </style>
+    <script>
+        function convertMarkdownToHtml(markdown) {
+            return markdown
+                .replace(/# (.*?)(\n|$)/g, '<h1>$1</h1>')
+                .replace(/## (.*?)(\n|$)/g, '<h2>$1</h2>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const markdownInput = document.getElementById('markdown-input');
+            const htmlOutput = document.getElementById('html-output');
+            const saveButton = document.getElementById('save-button');
+            const generateLinkButton = document.getElementById('generate-link-button');
+            const sharingLink = document.getElementById('sharing-link');
+
+            markdownInput.addEventListener('input', () => {
+                const markdown = markdownInput.value;
+                htmlOutput.innerHTML = convertMarkdownToHtml(markdown);
+            });
+
+            saveButton.addEventListener('click', () => {
+                const fileName = prompt('Enter a name for your file:', 'my-file.md');
+                if (fileName) {
+                    const markdownContent = markdownInput.value;
+                    const blob = new Blob([markdownContent], { type: 'text/markdown' });
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = fileName;
+                    a.click();
+                    alert('File saved successfully!');
+                }
+            });
+
+            generateLinkButton.addEventListener('click', () => {
+                const markdownContent = markdownInput.value;
+                const fileName = 'shared-file.md';
+                const blob = new Blob([markdownContent], { type: 'text/markdown' });
+                const link = URL.createObjectURL(blob);
+                sharingLink.textContent = link;
+                sharingLink.href = link;
+                sharingLink.style.display = 'inline-block';
+            });
+        });
+
+        function copyToClipboard() {
+            const htmlOutput = document.getElementById('html-output').innerHTML;
+            navigator.clipboard.writeText(htmlOutput).then(() => {
+                alert('HTML copied to clipboard!');
+            });
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <h1>Markdown to HTML Converter</h1>
+        <div class="auth-container">
+            <input type="text" placeholder="Username" id="username">
+            <input type="password" placeholder="Password" id="password">
+            <button class="button">Login</button>
+        </div>
+    </header>
+    <div class="toolbar">
+        <div class="right">
+            <button class="button" id="save-button">Save</button>
+            <button class="button" onclick="copyToClipboard()">Copy HTML</button>
+            <button class="button" id="generate-link-button">Generate Sharing Link</button>
+        </div>
+    </div>
+    <main>
+        <div class="editor">
+            <textarea id="markdown-input" placeholder="Write your Markdown here..."></textarea>
+        </div>
+        <div class="preview" id="html-output">
+            <!-- Rendered HTML output will appear here -->
+        </div>
+    </main>
+    <footer>
+        <p>© 2025 Markdown Converter. <a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Service</a></p>
+        <p>Sharing Link: <a id="sharing-link" href="#" target="_blank" style="display:none;">Click here to access your file</a></p>
+    </footer>
+</body>
+</html>

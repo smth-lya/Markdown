@@ -1,0 +1,347 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saved Files</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            background-color: #1e1e1e;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333333;
+        }
+
+            header h1 {
+                font-size: 1.5rem;
+            }
+
+            header .search-bar input {
+                padding: 8px 12px;
+                background-color: #222222;
+                border: 1px solid #444444;
+                border-radius: 5px;
+                color: #bbbbbb;
+                outline: none;
+                width: 250px;
+            }
+
+        .toolbar {
+            background-color: #1e1e1e;
+            padding: 10px 20px;
+            border-bottom: 1px solid #333333;
+            display: none;
+            align-items: center;
+            gap: 15px;
+        }
+
+            .toolbar.active {
+                display: flex;
+            }
+
+            .toolbar .selected-count {
+                font-size: 1rem;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+
+            .toolbar button {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                padding: 8px 12px;
+                background-color: #222222;
+                border: 1px solid #444444;
+                border-radius: 5px;
+                color: #bbbbbb;
+                cursor: pointer;
+                transition: background-color 0.2s ease, color 0.2s ease;
+            }
+
+                .toolbar button:hover {
+                    background-color: #333333;
+                    color: #ffffff;
+                }
+
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .file-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .file-item {
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: background-color 0.3s ease, border 0.3s ease;
+            position: relative;
+            height: 150px;
+        }
+
+            .file-item.selected {
+                background-color: #333333;
+                border: 2px solid #bbbbbb;
+            }
+
+            .file-item:hover {
+                background-color: #2a2a2a;
+            }
+
+            .file-item .file-icon {
+                font-size: 2rem;
+                color: #bbbbbb;
+            }
+
+            .file-item .file-name {
+                margin-top: auto;
+                font-size: 0.9rem;
+                color: #e0e0e0;
+            }
+
+            .file-item .file-date {
+                font-size: 0.8rem;
+                color: #888888;
+            }
+
+            .file-item .menu-button {
+                position: absolute;
+                bottom: 10px;
+                right: 10px;
+                background-color: transparent;
+                border: none;
+                color: #bbbbbb;
+                cursor: pointer;
+                font-size: 1.2rem;
+            }
+
+                .file-item .menu-button:hover {
+                    color: #ffffff;
+                }
+
+        .context-menu {
+            position: absolute;
+            background-color: #1e1e1e;
+            border: 1px solid #333333;
+            border-radius: 5px;
+            display: none;
+            flex-direction: column;
+            padding: 5px 0;
+            z-index: 10;
+        }
+
+            .context-menu button {
+                background: none;
+                border: none;
+                color: #bbbbbb;
+                padding: 8px 15px;
+                text-align: left;
+                width: 100%;
+                cursor: pointer;
+            }
+
+                .context-menu button:hover {
+                    background-color: #333333;
+                    color: #ffffff;
+                }
+
+        footer {
+            background-color: #1e1e1e;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.9rem;
+            color: #555555;
+            border-top: 1px solid #333333;
+        }
+
+            footer a {
+                color: #888888;
+                text-decoration: none;
+            }
+
+                footer a:hover {
+                    color: #bbbbbb;
+                }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const fileItems = document.querySelectorAll('.file-item');
+            const toolbar = document.querySelector('.toolbar');
+            const selectedCount = document.querySelector('.selected-count span');
+
+            let selectedFiles = new Set();
+            let activeContextMenu = null;
+
+            fileItems.forEach(item => {
+                // Left click or Shift + Click
+                item.addEventListener('click', (event) => {
+                    if (event.shiftKey || selectedFiles.size > 0) {
+                        toggleSelection(item);
+                    } else {
+                        openFile(item);
+                    }
+                    updateToolbar();
+                });
+
+                // Right click for context menu and selection
+                item.addEventListener('contextmenu', (event) => {
+                    event.preventDefault();
+                    toggleSelection(item);
+                    showContextMenu(event, item);
+                    updateToolbar();
+                });
+
+                // Context menu for file options
+                const menuButton = item.querySelector('.menu-button');
+                menuButton.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    showContextMenu(event, item);
+                });
+            });
+
+            // Toggle selection logic
+            function toggleSelection(item) {
+                if (item.classList.contains('selected')) {
+                    item.classList.remove('selected');
+                    selectedFiles.delete(item);
+                } else {
+                    item.classList.add('selected');
+                    selectedFiles.add(item);
+                }
+            }
+
+            // Update toolbar state
+            function updateToolbar() {
+                if (selectedFiles.size > 0) {
+                    toolbar.classList.add('active');
+                    selectedCount.textContent = selectedFiles.size;
+                } else {
+                    toolbar.classList.remove('active');
+                }
+            }
+
+            // Open a file for editing
+            function openFile(item) {
+                const fileName = item.querySelector('.file-name').textContent;
+                console.log(`Opening file: ${fileName}`);
+                alert(`File opened: ${fileName}`); // Replace with actual navigation logic
+            }
+
+            // Show the context menu
+            function showContextMenu(event, item) {
+                if (activeContextMenu) activeContextMenu.remove();
+
+                const menu = document.createElement('div');
+                menu.classList.add('context-menu');
+                menu.innerHTML = `
+                        <button onclick="renameFile('${item.querySelector('.file-name').textContent}')">Rename</button>
+                        <button onclick="deleteFile('${item.querySelector('.file-name').textContent}')">Delete</button>
+                    `;
+
+                document.body.appendChild(menu);
+                menu.style.top = `${event.clientY}px`;
+                menu.style.left = `${event.clientX}px`;
+                menu.style.display = 'flex';
+                activeContextMenu = menu;
+
+                const handleClickOutside = (e) => {
+                    if (!menu.contains(e.target)) {
+                        menu.remove();
+                        document.removeEventListener('click', handleClickOutside);
+                        activeContextMenu = null;
+                    }
+                };
+
+                document.addEventListener('click', handleClickOutside);
+            }
+
+            // Rename file
+            function renameFile(fileName) {
+                const newFileName = prompt(`Rename file "${fileName}" to:`);
+                if (newFileName) {
+                    console.log(`File renamed from ${fileName} to ${newFileName}`);
+                    alert(`File renamed to: ${newFileName}`); // Simulate renaming
+                }
+            }
+
+            // Delete file
+            function deleteFile(fileName) {
+                if (confirm(`Are you sure you want to delete "${fileName}"?`)) {
+                    console.log(`File deleted: ${fileName}`);
+                    alert(`File deleted: ${fileName}`); // Simulate deletion
+                }
+            }
+        });
+    </script>
+</head>
+<body>
+    <header>
+        <h1>Saved Files</h1>
+        <div class="search-bar">
+            <input type="text" placeholder="Search files...">
+        </div>
+    </header>
+
+    <div class="toolbar">
+        <div class="selected-count"><span>0</span> selected</div>
+        <button><span>🗑️</span> Delete</button>
+        <button><span>⬇️</span> Download</button>
+    </div>
+
+    <main>
+        <div class="file-list">
+            <div class="file-item">
+                <div class="file-icon">📄</div>
+                <div class="file-name">File1.md</div>
+                <div class="file-date">Last edited: Jan 20, 2025</div>
+                <button class="menu-button">⋮</button>
+            </div>
+            <div class="file-item">
+                <div class="file-icon">📄</div>
+                <div class="file-name">File2.md</div>
+                <div class="file-date">Last edited: Jan 19, 2025</div>
+                <button class="menu-button">⋮</button>
+            </div>
+            <div class="file-item">
+                <div class="file-icon">📄</div>
+                <div class="file-name">File3.md</div>
+                <div class="file-date">Last edited: Jan 18, 2025</div>
+                <button class="menu-button">⋮</button>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2025 Markdown Converter. <a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Service</a></p>
+    </footer>
+</body>
+</html>
