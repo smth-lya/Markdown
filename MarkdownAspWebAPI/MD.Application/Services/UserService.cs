@@ -7,7 +7,7 @@ public interface IUserService
 {
     Task<Result<User>> SignUpAsync(string email, string password, CancellationToken cancellationToken = default);
     Task<Result<JwtTokenPair>> SignInAsync(string email, string password, CancellationToken cancellationToken = default);
-    Task<Result> SignOutAsync(JwtToken refreshToken, CancellationToken cancellationToken = default);
+    Result SignOutAsync(JwtToken refreshToken);
 }
 
 public class UserService : IUserService
@@ -53,15 +53,15 @@ public class UserService : IUserService
         if (!isVerified)
             return Result.Invalid(new ValidationError("Invalid password"));
 
-        var tokenPair = await _jwtService.IssueAsync(user, cancellationToken);
+        var tokenPair = _jwtService.Issue(user);
 
         return Result.Success(tokenPair);
     }
 
-    public Task<Result> SignOutAsync(JwtToken refreshToken, CancellationToken cancellationToken = default)
+    public Result SignOutAsync(JwtToken refreshToken)
     {
         _jwtService.InvalidateRefreshToken(refreshToken);
 
-        return Task.FromResult(Result.Success());
+        return Result.Success();
     }
 }

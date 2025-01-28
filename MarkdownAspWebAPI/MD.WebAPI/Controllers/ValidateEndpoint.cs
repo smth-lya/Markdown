@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MD.WebAPI;
 
 [ApiController]
-[Route("auth")]
+[Route("api/auth")]
 public sealed class ValidateEndpoint : ControllerBase
 {
     private readonly IJwtEncoder _jwtEncoder;
@@ -15,7 +15,7 @@ public sealed class ValidateEndpoint : ControllerBase
     }
 
     [HttpPost("/validate")]
-    public IActionResult ValidateToken([FromBody] ValidateTokenRequest request)
+    public IActionResult ValidateToken([FromHeader] ValidateTokenRequest request)
     {
         var jwtToken = new JwtToken(request.AccessToken);
 

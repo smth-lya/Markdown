@@ -4,8 +4,25 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Http.Json;
 using System.Text.Json;
+using Serilog;
+using MD.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, config) =>
+{
+    config.ReadFrom.Configuration(context.Configuration);
+});
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 5 * 1024 * 1024;
+});
+
+builder.Services
+    .AddApplication(builder.Configuration)
+    .AddInfrastructure(builder.Configuration, builder.Environment);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme);
@@ -17,7 +34,7 @@ builder.Services.AddAuthorizationBuilder()
     });
 
 builder.Services.Configure<JsonOptions>(options =>
-{
+{ 
     options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
 });
 
@@ -25,8 +42,7 @@ builder.Services.ConfigureOptions<JwtBearerConfigureOptions>();
 
 var app = builder.Build();
 
-
-
+app.UseExceptionHandler();
 app.UseStaticFiles();
 
 app.UseCookiePolicy(new CookiePolicyOptions
@@ -36,9 +52,8 @@ app.UseCookiePolicy(new CookiePolicyOptions
     Secure = CookieSecurePolicy.Always
 });
 
-//app.UseRouting();
-
-app.UseAuthorization();
+//app.UseAuthentication();
+//app.UseAuthorization();
 
 app.MapGet("/", async (context) =>
 {
@@ -96,4 +111,22 @@ app.MapGet("/file-storage", async (context) =>
 
 });
 
+if (app.Environment.IsDevelopment())
+{
+    MigrateDatabase(app);
+}
+
 app.Run();
+return;
+
+
+static void MigrateDatabase(WebApplication app)
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    if (dbContext.Database.GetPendingMigrations().Any())
+    {
+        dbContext.Database.Migrate();
+    }
+}

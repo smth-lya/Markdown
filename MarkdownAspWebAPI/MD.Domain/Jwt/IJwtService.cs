@@ -12,7 +12,7 @@ public interface IJwtService
     /// </summary>
     /// <param name="user">Пользователь, для которого генерируются токены.</param>
     /// <returns>Пара токенов (AccessToken и RefreshToken).</returns>
-    Task<JwtTokenPair> IssueAsync(User user, CancellationToken cancellationToken = default);
+    JwtTokenPair Issue(User user);
 
     /// <summary>
     /// Обновляет токены, используя предоставленный RefreshToken, если он действителен.

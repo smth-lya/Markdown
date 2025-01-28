@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MD.WebAPI;
 
 [ApiController]
-[Route("auth")]
+[Route("api/auth")]
 public sealed class SignUpEndpoint : ControllerBase
 {
     private readonly IUserService _userService;
@@ -21,10 +21,10 @@ public sealed class SignUpEndpoint : ControllerBase
 
     [HttpPost("signup")]
     [AllowAnonymous]
-    public async Task<IActionResult> CreateUser([FromBody] SignUpRequest request, CancellationToken ct)
+    public async Task<IActionResult> CreateUser([FromBody] SignUpRequest request, CancellationToken cancellationToken)
     {
         var validator = new SingUpRequestValidator(_rulePredicates);
-        var validationResult = await validator.ValidateAsync(request, ct);
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
 
         if (!validationResult.IsValid)
         {
@@ -32,7 +32,7 @@ public sealed class SignUpEndpoint : ControllerBase
             return BadRequest(errors);
         }
         
-        var result = await _userService.SignUpAsync(request.Email, request.Password, ct);
+        var result = await _userService.SignUpAsync(request.Email, request.Password, cancellationToken);
 
         var response = new SignUpResponse(result.Value.Id);
         return Ok(response);

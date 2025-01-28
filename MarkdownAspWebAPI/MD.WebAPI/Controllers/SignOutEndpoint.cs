@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MD.WebAPI;
 
 [ApiController]
-[Route("auth")]
+[Route("api/auth")]
 public sealed class SignOutEndpoint : ControllerBase
 {
     private readonly IUserService _userService;
@@ -18,11 +18,15 @@ public sealed class SignOutEndpoint : ControllerBase
 
     [HttpPost("signout")]
     [AllowAnonymous]
-    public async Task<IActionResult> SignOut([FromBody] SignOutRequest request, CancellationToken ct)
+    public IActionResult SignOut(CancellationToken cancellationToken)
     {
-        var jwtToken = new JwtToken(request.RefreshToken);
+        if (!Request.Cookies.TryGetValue(JwtTokenConstants.RefreshTokenType, out var refreshToken) || string.IsNullOrEmpty(refreshToken))
+            return Ok();
 
-        await _userService.SignOutAsync(jwtToken, ct);
+        var jwtToken = new JwtToken(refreshToken);
+        var result = _userService.SignOutAsync(jwtToken);
+
+        Response.Cookies.Delete(JwtTokenConstants.RefreshTokenType);
 
         return Ok();
     }

@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация</title>
+    <title>Регистрация / Вход</title>
+    <!--<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">-->
     <link rel="stylesheet" href="styles.css">
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
@@ -64,6 +64,7 @@
                 transform: translateY(-50%);
                 color: #aaa;
                 font-size: 16px;
+                pointer-events: none;
             }
 
         label {
@@ -97,6 +98,7 @@
             font-size: 12px;
             color: #ff4d4d;
             text-align: left;
+            margin-top: 10px;
         }
 
             .validation-list li {
@@ -138,6 +140,21 @@
             button:hover {
                 transform: scale(1.05);
             }
+
+        .switch {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+            .switch a {
+                color: #ff0099;
+                cursor: pointer;
+                text-decoration: none;
+            }
+
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -164,13 +181,63 @@
                     <li><span class="checkmark"></span> Спецсимвол (!@#$%^&*)</li>
                 </ul>
             </div>
-            <button type="submit">
-                <i class="fas fa-user-plus"></i> Зарегистрироваться
-            </button>
+            <button type="submit" disabled>Зарегистрироваться</button>
+            <p class="switch">Уже есть аккаунт? <a onclick="toggleForms()">Войти</a></p>
+        </form>
 
+        <form class="login-form hidden" id="loginForm">
+            <h2>Вход</h2>
+            <div class="input-group">
+                <i class="fas fa-envelope"></i>
+                <label for="login-email">Email</label>
+                <input type="email" id="login-email" placeholder="Введите email" required>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <label for="login-password">Пароль</label>
+                <input type="password" id="login-password" placeholder="Введите пароль" required>
+            </div>
+            <button type="submit">Войти</button>
+            <p class="switch">Нет аккаунта? <a onclick="toggleForms()">Зарегистрироваться</a></p>
         </form>
     </div>
-    <script>
+    <script type="module">
+        function toggleForms() {
+            document.getElementById("registerForm").classList.toggle("hidden");
+            document.getElementById("loginForm").classList.toggle("hidden");
+        }
+
+        // Регистрация
+        document.getElementById("registerForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const username = "defaultUsername";  // Можно взять значение из дополнительного поля, если оно есть
+
+            try {
+                const data = await signUp(username, email, password);
+                alert('Регистрация прошла успешно!');
+                toggleForms();  // Переключаем на форму входа
+            } catch (error) {
+                alert(`Ошибка: ${error.message}`);
+            }
+        });
+
+        // Вход
+        document.getElementById("loginForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const email = document.getElementById("login-email").value;
+            const password = document.getElementById("login-password").value;
+
+            try {
+                const data = await signIn(email, password);
+                alert('Вы успешно вошли!');
+                window.location.href = '/main';  // Перенаправляем на главную страницу
+            } catch (error) {
+                alert(`Ошибка: ${error.message}`);
+            }
+        });
+
         function validateField(input, checks, validationList) {
             checks.forEach((check, index) => {
                 let element = validationList.children[index];
@@ -182,6 +249,13 @@
             });
         }
 
+        function toggleSubmitButton() {
+            const emailValid = document.querySelectorAll("#emailValidation .valid").length === 2;
+            const passwordValid = document.querySelectorAll("#passwordValidation .valid").length === 4;
+            const submitButton = document.querySelector("button[type='submit']");
+            submitButton.disabled = !(emailValid && passwordValid);
+        }
+
         document.getElementById("password").addEventListener("input", function () {
             validateField(this, [
                 { regex: /.{8,}/ },
@@ -189,14 +263,37 @@
                 { regex: /\d/ },
                 { regex: /[!@#$%^&*]/ }
             ], document.getElementById("passwordValidation"));
+            toggleSubmitButton();
         });
 
         document.getElementById("email").addEventListener("input", function () {
+            if (this.value === "") {
+                this.style.borderColor = "#ff4d4d";  // Подсветить поле, если оно пустое
+            } else {
+                this.style.borderColor = "#333";  // Вернуть стандартный цвет
+            }
+
             validateField(this, [
                 { regex: /@/ },
                 { regex: /\./ }
             ], document.getElementById("emailValidation"));
+            toggleSubmitButton();
         });
+
+        // Для кнопки регистрации
+        document.getElementById("registerForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const emailInput = document.getElementById("email");
+            const passwordInput = document.getElementById("password");
+            if (emailInput.value && passwordInput.value &&
+                document.querySelectorAll("#emailValidation .valid").length === 2 &&
+                document.querySelectorAll("#passwordValidation .valid").length === 4) {
+                console.log("Успешная регистрация");
+            } else {
+                console.log("Ошибка валидации");
+            }
+        });
+
     </script>
 </body>
 </html>

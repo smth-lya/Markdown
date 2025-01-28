@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MD.WebAPI;
 
 [ApiController]
-[Route("auth")]
+[Route("api/auth")]
 public sealed class SignInEndpoint : ControllerBase
 {
     private readonly IUserService _userService;
@@ -22,10 +22,10 @@ public sealed class SignInEndpoint : ControllerBase
 
     [HttpPost("signin")]
     [AllowAnonymous]
-    public async Task<IActionResult> SignIn([FromBody] SignInRequest request, CancellationToken ct)
+    public async Task<IActionResult> SignIn([FromBody] SignInRequest request, CancellationToken cancellationToken)
     {
         var validator = new SignInValidator(_rulePredicates);
-        var validationResult = await validator.ValidateAsync(request, ct);
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
 
         if (!validationResult.IsValid)
         {
@@ -35,7 +35,7 @@ public sealed class SignInEndpoint : ControllerBase
 
         Result<JwtTokenPair> result = request switch
         {
-            { Email: not null } => await _userService.SignInAsync(request.Email, request.Password, ct),
+            { Email: not null } => await _userService.SignInAsync(request.Email, request.Password, cancellationToken),
             _ => Result<JwtTokenPair>.Error("Username or email must be set")
         };
 
@@ -44,7 +44,17 @@ public sealed class SignInEndpoint : ControllerBase
             return BadRequest(string.Join("; ", result.Errors));
         }
 
-        var response = new SignInResponse(result.Value.AccessToken.Token, result.Value.RefreshToken.Token);
+        var tokenPair = result.Value;
+
+        Response.Cookies.Append(JwtTokenConstants.RefreshTokenType, tokenPair.RefreshToken.Token, new CookieOptions()
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddDays(7)
+        });
+
+        var response = new SignInResponse(tokenPair.AccessToken.Token, tokenPair.RefreshToken.Token);
         return Ok(response);
     }
 

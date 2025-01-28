@@ -29,5 +29,5 @@ public interface IJwtEncoder
     /// </summary>
     /// <param name="token">JWT токен, который необходимо проверить.</param>
     /// <exception cref="SecurityTokenException">Выбрасывается, если токен недействителен.</exception>
-    IEnumerable<Claim> ValidateToken(JwtToken token);
+    ClaimsPrincipal ValidateToken(JwtToken token);
 }
