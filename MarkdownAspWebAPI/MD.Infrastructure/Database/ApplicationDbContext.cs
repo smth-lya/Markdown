@@ -32,13 +32,21 @@ public class ApplicationDbContext : DbContext
 
             x.Property(p => p.CreatedAt)
                 .HasDefaultValueSql("NOW()");
-
-            x.Property(p => p.UpdatedAt)
-                .ValueGeneratedOnAddOrUpdate();
         });
 
         base.OnModelCreating(modelBuilder);
     }
+
+    public override int SaveChanges()
+    {
+        foreach (var entry in ChangeTracker.Entries<Document>())
+        {
+            if (entry.State == EntityState.Modified)
+            {
+                entry.Property("UpdatedAt").CurrentValue = DateTime.UtcNow;
+            }
+        }
+
+        return base.SaveChanges();
+    }
 }
-
-

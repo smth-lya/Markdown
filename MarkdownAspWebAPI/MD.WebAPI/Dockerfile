@@ -1,30 +1,26 @@
 # См. статью по ссылке https://aka.ms/customizecontainer, чтобы узнать как настроить контейнер отладки и как Visual Studio использует этот Dockerfile для создания образов для ускорения отладки.
 
-# Этот этап используется при запуске из VS в быстром режиме (по умолчанию для конфигурации отладки)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
-
-# Этот этап используется для сборки проекта службы
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["MarkdownAspWebAPI/MarkdownAspWebAPI.csproj", "MarkdownAspWebAPI/"]
-RUN dotnet restore "./MarkdownAspWebAPI/MarkdownAspWebAPI.csproj"
+COPY ["MD.WebAPI/MD.WebAPI.csproj", "MD.WebAPI/"]
+RUN dotnet restore "MD.WebAPI/MD.WebAPI.csproj"
 COPY . .
-WORKDIR "/src/MarkdownAspWebAPI"
-RUN dotnet build "./MarkdownAspWebAPI.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/MD.WebAPI"
+RUN dotnet build "MD.WebAPI.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
-# Этот этап используется для публикации проекта службы, который будет скопирован на последний этап
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./MarkdownAspWebAPI.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "MD.WebAPI.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-# Этот этап используется в рабочей среде или при запуске из VS в обычном режиме (по умолчанию, когда конфигурация отладки не используется)
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "MarkdownAspWebAPI.dll"]
+ENTRYPOINT ["dotnet", "MD.WebAPI.dll"]
+

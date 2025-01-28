@@ -1,0 +1,49 @@
+﻿version: '3.8'
+name: Markdown
+services:
+  web:
+    build:
+      context: .
+      dockerfile: MD.WebAPI/Dockerfile
+      args:
+        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION}
+    container_name: web
+    ports:
+      - "${WEB_PORT}:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      ConnectionStrings:PostgresConnection: ${DB_CONNECTION_STRING}
+    depends_on:
+     - db
+     - seq
+    networks:
+      - app_network
+
+  db:
+    image: postgres:15
+    container_name: markdown_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+  seq:
+    image: datalust/seq
+    container_name: markdown_seq
+    environment:
+      - ACCEPT_EULA=Y
+    volumes:
+      - seq_data:/data
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  db_data:
+  seq_data:

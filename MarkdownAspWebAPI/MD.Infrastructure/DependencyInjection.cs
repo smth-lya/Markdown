@@ -13,9 +13,9 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration, 
         IHostEnvironment environment)
-    {
+    {   
         services.AddMemoryCache();
-
+        
         if (!environment.IsEnvironment("Test"))
         {
             services.AddDbContext<ApplicationDbContext>(options =>
@@ -25,7 +25,7 @@ public static class DependencyInjection
                     options.EnableSensitiveDataLogging();
                 }
 
-                var dataSourceBuilder = new NpgsqlDataSourceBuilder(configuration.GetConnectionString("AppicationConnection"));
+                var dataSourceBuilder = new NpgsqlDataSourceBuilder("Host=db;Port=5432;Username=postgres;Password=2546;Database=markdownapp");
                 dataSourceBuilder.EnableDynamicJson();
                 var dataSource = dataSourceBuilder.Build();
 

@@ -7,6 +7,7 @@ using System.Text.Json;
 using Serilog;
 using MD.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using MD.Domain;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,7 +35,7 @@ builder.Services.AddAuthorizationBuilder()
     });
 
 builder.Services.Configure<JsonOptions>(options =>
-{ 
+{
     options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
 });
 
@@ -42,7 +43,6 @@ builder.Services.ConfigureOptions<JwtBearerConfigureOptions>();
 
 var app = builder.Build();
 
-app.UseExceptionHandler();
 app.UseStaticFiles();
 
 app.UseCookiePolicy(new CookiePolicyOptions
@@ -52,63 +52,49 @@ app.UseCookiePolicy(new CookiePolicyOptions
     Secure = CookieSecurePolicy.Always
 });
 
-//app.UseAuthentication();
-//app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();
 
-app.MapGet("/", async (context) =>
+app.MapGet("/", () => "9 ASP Hello World!" + builder.Configuration.GetConnectionString("PostgresConnection"));
+app.MapGet("/add", async () =>
+    "10 ASP Hello World!" + 
+    await app.Services.CreateScope().ServiceProvider.GetRequiredService<IUserRepository>()
+    .AddAsync(new User("1@", "2323")));
+
+app.MapGet("/read", async () => 
+    "10 ASP Hello World!" + 
+    (await app.Services.CreateScope().ServiceProvider.GetRequiredService<IUserRepository>().GetUserByEmailAsync("1@"))
+    .Value?.Email);
+
+
+app.MapGet("/home", async (context) =>
 {
-	try
-	{
-        var file = await File.ReadAllBytesAsync("wwwroot/index.html");
+    var file = await File.ReadAllBytesAsync("wwwroot/index.html");
 
-        context.Response.ContentType = "text/html;charset=utf-8";
-        context.Response.ContentLength = file.Length;
+    context.Response.ContentType = "text/html;charset=utf-8";
+    context.Response.ContentLength = file.Length;
 
-        await context.Response.BodyWriter.WriteAsync(file);
-    }
-	catch (Exception ex)
-	{
-
-		throw;
-	}
-
+    await context.Response.BodyWriter.WriteAsync(file);
 });
 
 app.MapGet("/md-converter", async (context) =>
 {
-    try
-    {
-        var file = await File.ReadAllBytesAsync("wwwroot/converter.html");
+    var file = await File.ReadAllBytesAsync("wwwroot/converter.html");
 
-        context.Response.ContentType = "text/html;charset=utf-8";
-        context.Response.ContentLength = file.Length;
+    context.Response.ContentType = "text/html;charset=utf-8";
+    context.Response.ContentLength = file.Length;
 
-        await context.Response.BodyWriter.WriteAsync(file);
-    }
-    catch (Exception ex)
-    {
-
-        throw;
-    }
-
+    await context.Response.BodyWriter.WriteAsync(file);
 });
 
 app.MapGet("/file-storage", async (context) =>
 {
-    try
-    {
-        var file = await File.ReadAllBytesAsync("wwwroot/storage.html");
+    var file = await File.ReadAllBytesAsync("wwwroot/storage.html");
 
-        context.Response.ContentType = "text/html;charset=utf-8";
-        context.Response.ContentLength = file.Length;
+    context.Response.ContentType = "text/html;charset=utf-8";
+    context.Response.ContentLength = file.Length;
 
-        await context.Response.BodyWriter.WriteAsync(file);
-    }
-    catch (Exception ex)
-    {
-        throw;
-    }
-
+    await context.Response.BodyWriter.WriteAsync(file);
 });
 
 if (app.Environment.IsDevelopment())
@@ -118,8 +104,7 @@ if (app.Environment.IsDevelopment())
 
 app.Run();
 return;
-
-
+    
 static void MigrateDatabase(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
