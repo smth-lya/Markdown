@@ -16,7 +16,7 @@ public static class DependencyInjection
         IHostEnvironment environment)
     {   
         services.AddMemoryCache();
-        
+
         if (!environment.IsEnvironment("Test"))
         {
             services.AddDbContext<ApplicationDbContext>(options =>
@@ -26,6 +26,8 @@ public static class DependencyInjection
                     options.EnableSensitiveDataLogging();
                 }
 
+                Console.WriteLine("HOST");
+                Console.WriteLine(configuration.GetConnectionString("PostgresConnection"));
                 var dataSourceBuilder = new NpgsqlDataSourceBuilder(configuration.GetConnectionString("PostgresConnection"));
                 dataSourceBuilder.EnableDynamicJson();
                 var dataSource = dataSourceBuilder.Build();
@@ -40,26 +42,3 @@ public static class DependencyInjection
         return services;
     }
 }
-//public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
-//{
-//    public ApplicationDbContext CreateDbContext(string[] args)
-//    {
-//        // Создаем конфигурацию из переменных окружения
-//        var configuration = new ConfigurationBuilder()
-//            .AddEnvironmentVariables()
-//            .Build();
-
-//        var connectionString = configuration.GetConnectionString("PostgresConnection");
-
-//        if (string.IsNullOrEmpty(connectionString))
-//            throw new InvalidOperationException("Не найдена строка подключения в переменных окружения");
-
-//        var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
-//        builder.UseNpgsql(
-//            connectionString,
-//            options => options.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)
-//        );
-
-//        return new ApplicationDbContext(builder.Options);
-//    }
-//}
