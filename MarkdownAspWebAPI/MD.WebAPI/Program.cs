@@ -8,6 +8,8 @@ using Serilog;
 using MD.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using MD.Domain;
+using System;
+using Microsoft.EntityFrameworkCore.Design;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,7 +49,7 @@ app.UseStaticFiles();
 
 app.UseCookiePolicy(new CookiePolicyOptions
 {
-    MinimumSameSitePolicy = SameSiteMode.Strict,
+    MinimumSameSitePolicy = SameSiteMode.Strict, 
     HttpOnly = HttpOnlyPolicy.Always,
     Secure = CookieSecurePolicy.Always
 });
@@ -56,16 +58,41 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapGet("/", () => "9 ASP Hello World!" + builder.Configuration.GetConnectionString("PostgresConnection"));
-app.MapGet("/add", async () =>
+app.MapGet("user/add", async () =>
     "10 ASP Hello World!" + 
+      
     await app.Services.CreateScope().ServiceProvider.GetRequiredService<IUserRepository>()
-    .AddAsync(new User("1@", "2323")));
+    .AddAsync(new User($"1@{Random.Shared.Next(0, 10000)}email", $"{Random.Shared.Next()}")));
+
+//app.MapGet("/add", async () =>
+//    "10 ASP Hello World!" + 
+      
+//    await app.Services.CreateScope().ServiceProvider.<IUserRepository>()
+//    .AddAsync(new User($"1@{Random.Shared.Next(0, 10000)}email", $"{Random.Shared.Next()}")));
+
+
 
 app.MapGet("/read", async () => 
     "10 ASP Hello World!" + 
-    (await app.Services.CreateScope().ServiceProvider.GetRequiredService<IUserRepository>().GetUserByEmailAsync("1@"))
+    (await app.Services.CreateScope().ServiceProvider.GetRequiredService<IUserRepository>().GetUserByEmailAsync($"1@{Random.Shared.Next(0, 10000)}email"))
     .Value?.Email);
 
+app.MapGet("/users", async (ApplicationDbContext dbcontext) =>
+{
+    var users = await dbcontext.Users
+            .Select(u => $"Id: {u.Id} | Email: {u.Email} | PasswordHash: {u.PasswordHash}")
+            .ToListAsync();
+
+    string result = string.Join("\n", users);
+
+    return string.IsNullOrEmpty(result) ? Results.NotFound("No users found") : Results.Text(result);
+});
+
+app.MapGet("/connection", (ApplicationDbContext dbContext) =>
+{
+    var connectionString = dbContext.Database.GetDbConnection().ConnectionString;
+    return Results.Ok($"Connected to: {connectionString}");
+});
 
 app.MapGet("/home", async (context) =>
 {
@@ -97,21 +124,5 @@ app.MapGet("/file-storage", async (context) =>
     await context.Response.BodyWriter.WriteAsync(file);
 });
 
-if (app.Environment.IsDevelopment())
-{
-    MigrateDatabase(app);
-}
-
 app.Run();
-return;
-    
-static void MigrateDatabase(WebApplication app)
-{
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-    if (dbContext.Database.GetPendingMigrations().Any())
-    {
-        dbContext.Database.Migrate();
-    }
-}
+return;   

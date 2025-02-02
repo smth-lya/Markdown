@@ -1,49 +1,85 @@
 ﻿version: '3.8'
 name: Markdown
+
 services:
   web:
     build:
       context: .
-      dockerfile: MD.WebAPI/Dockerfile
+      dockerfile: Dockerfile
+      target: final  
       args:
-        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION}
+        - BUILD_CONFIGURATION=${ASPNETCORE_ENVIRONMENT:-Release}
+        - DB_CONNECTION_STRING=${DB_CONNECTION_STRING}
+        - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
     container_name: web
     ports:
-      - "${WEB_PORT}:8080"
+      - "${WEB_PORT}:8080"  
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
       ConnectionStrings:PostgresConnection: ${DB_CONNECTION_STRING}
+      Minio__Endpoint: http://minio:9000  
+      Minio__AccessKey: ${MINIO_ROOT_USER}
+      Minio__SecretKey: ${MINIO_ROOT_PASSWORD}
+      Minio__BucketName: ${MINIO_BUCKET_NAME}
+    env_file: 
+    - .env
     depends_on:
-     - db
-     - seq
+      db:
+        condition: service_healthy  
+      minio:
+        condition: service_started
     networks:
       - app_network
 
   db:
     image: postgres:15
-    container_name: markdown_db
+    container_name: db
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data  
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_network
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    command: server /data --console-address ":9001"  # Консоль 
+    ports:
+      - "9000:9000"  # API 
+      - "9001:9001"  # Консоль
+    volumes:
+      - minio_data:/data  
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     networks:
       - app_network
 
   seq:
     image: datalust/seq
-    container_name: markdown_seq
+    container_name: seq
     environment:
       - ACCEPT_EULA=Y
     volumes:
-      - seq_data:/data
+      - seq_data:/data  
+    networks:
+      - app_network
 
+# Сети и тома
 networks:
   app_network:
     driver: bridge
 
 volumes:
-  db_data:
-  seq_data:
+  db_data:  
+  seq_data:  
+  minio_data:  
