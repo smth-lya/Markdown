@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Minio;
 using Npgsql;
 
@@ -30,7 +31,7 @@ public static class DependencyInjection
                     options.EnableSensitiveDataLogging();
                 }
 
-                //"Host=db;Port=5432;Database=markdownapp;Username=postgres;Password=postgres"
+                //var dataSourceBuilder = new NpgsqlDataSourceBuilder("Host=db;Port=5432;Database=markdownapp;Username=postgres;Password=postgres");
                 var dataSourceBuilder = new NpgsqlDataSourceBuilder(configuration.GetConnectionString("PostgresConnection"));
                 dataSourceBuilder.EnableDynamicJson();
                 var dataSource = dataSourceBuilder.Build();
@@ -42,12 +43,13 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserReadRepository>(sp => sp.GetRequiredService<IUserRepository>());
 
-        services.AddScoped<IFileStorage, FileStorage>();
+        services.AddScoped<IFileStorage, MinioFileStorage>();
         
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<IDocumentReadRepository>(sp => sp.GetRequiredService<IDocumentRepository>());
 
-        services.AddScoped<IDocumentService, DocumentService>();
+        services.AddScoped<IPermissionRepository, PermissionRepository>();
+        services.AddScoped<IPermissionReadRepository>(sp => sp.GetRequiredService<IPermissionRepository>());
 
         return services;
     }

@@ -38,6 +38,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Libraries\Markdown.Core\Markdown.Core.csproj" />
+    <ProjectReference Include="..\Libraries\Markdown.Implementation\Markdown.Implementation.csproj" />
     <ProjectReference Include="..\MD.Application\MD.Application.csproj" />
     <ProjectReference Include="..\MD.Domain\MD.Domain.csproj" />
     <ProjectReference Include="..\MD.Infrastructure\MD.Infrastructure.csproj" />

@@ -1,14 +1,15 @@
 ﻿namespace MD.Domain;
 
-public sealed class Document
+public class Document
 {
-    public Guid Id { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
     public string FileName { get; set; }
     public string OriginalName { get; set; }
     public string Content { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public List<DocumentParticipant> DocumentParticipants { get; set; } = new();
+    public Guid OwnerId { get; set; }
+    public User Owner { get; set; }
 
+    public List<DocumentPermission> Permissions { get; set; } = new();
 }

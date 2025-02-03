@@ -9,7 +9,8 @@ public class User
     public required string Email { get; init; }
     public required string PasswordHash { get; init; }
 
-    public List<DocumentParticipant> DocumentParticipants { get; set; } = new();
+    public List<Document> OwnedDocuments { get; set; } = new();
+    public List<DocumentPermission> Permissions { get; set; } = new();
 
     public User() { }
 

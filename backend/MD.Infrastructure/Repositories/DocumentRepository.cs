@@ -46,4 +46,13 @@ public class DocumentRepository : IDocumentRepository
         var document = await _dbContext.Documents.FirstOrDefaultAsync(x => x.Id == id);
         return document is null ? Result<Document>.NotFound() : Result.Success(document); 
     }
+
+    public async Task<Result<Document>> GetDocumentWithPermissionsAsync(Guid documentId)
+    {
+        var document = await _dbContext.Documents
+            .Include(d => d.Permissions)
+            .FirstOrDefaultAsync(d => d.Id == documentId);
+
+        return document is null ? Result.NotFound() : Result.Success(document);
+    }
 }

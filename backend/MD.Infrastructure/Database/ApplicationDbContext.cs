@@ -5,25 +5,28 @@ namespace MD.Infrastructure;
 
 public class ApplicationDbContext : DbContext
 {
-    public DbSet<User> Users => Set<User>();
-    public DbSet<Document> Documents => Set<Document>();
-
-    public DbSet<DocumentParticipant> Participants => Set<DocumentParticipant>();
-
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     { }
+    public DbSet<User> Users { get; set; }
+    public DbSet<Document> Documents { get; set; }
+    public DbSet<DocumentPermission> DocumentPermissions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasPostgresExtension("pgcrypto");
+
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(u => u.Id);
 
-            entity.Property(u => u.Email)
-                .IsRequired()
-                .HasMaxLength(100);
+            entity.Property(u => u.Id)
+                .HasDefaultValueSql("gen_random_uuid()");
 
             entity.Property(u => u.PasswordHash)
+            .IsRequired()
+            .HasMaxLength(255);
+
+            entity.Property(u => u.Email)
                 .IsRequired()
                 .HasMaxLength(255);
 
@@ -35,46 +38,53 @@ public class ApplicationDbContext : DbContext
         {
             entity.HasKey(d => d.Id);
 
+            entity.HasIndex(d => d.CreatedAt);
+            entity.HasIndex(d => d.OriginalName);
+            
+            entity.Property(d => d.Id)
+                .HasDefaultValueSql("gen_random_uuid()");
+
             entity.Property(d => d.FileName)
                 .IsRequired()
-                .HasMaxLength(255);
+                .HasMaxLength(36); // Guid.ToString() length
+
+            entity.Property(d => d.OriginalName)
+                   .IsRequired()
+                   .HasMaxLength(255);
 
             entity.Property(d => d.Content)
-                .IsRequired();
+                .IsRequired()
+                .HasColumnType("text");
 
             entity.Property(d => d.CreatedAt)
-               .HasColumnType("timestamp with time zone")
-               .HasDefaultValueSql("NOW()");
-
-            entity.Property(d => d.UpdatedAt)
-                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("NOW()");
 
-            entity.HasIndex(d => d.OriginalName);
+            entity.HasOne(d => d.Owner)
+                .WithMany(u => u.OwnedDocuments)
+                .HasForeignKey(d => d.OwnerId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
-        modelBuilder.Entity<DocumentParticipant>(entity =>
+        modelBuilder.Entity<DocumentPermission>(entity =>
         {
-            entity.HasKey(dp => dp.Guid);
+            entity.HasKey(dp => dp.Id);
 
-            entity.HasOne(dp => dp.User)
-                .WithMany(u => u.DocumentParticipants)
-                .HasForeignKey(dp => dp.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(dp => dp.Id)
+                .HasDefaultValueSql("gen_random_uuid()");
 
             entity.HasOne(dp => dp.Document)
-                .WithMany(d => d.DocumentParticipants)
+                .WithMany(d => d.Permissions)
                 .HasForeignKey(dp => dp.DocumentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasIndex(dp => new { dp.UserId, dp.DocumentId })
+            entity.HasOne(dp => dp.User)
+                .WithMany(u => u.Permissions)
+                .HasForeignKey(dp => dp.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(dp => new { dp.DocumentId, dp.UserId })
                 .IsUnique();
-
-            entity.Property(dp => dp.Role)
-                .IsRequired()
-                .HasConversion<string>();  
         });
-
 
         base.OnModelCreating(modelBuilder);
     }

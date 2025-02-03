@@ -15,12 +15,12 @@ public class MinioOptions
     public string BucketName { get; set; }
 }
 
-public class FileStorage : IFileStorage
+public class MinioFileStorage : IFileStorage
 {
     private readonly MinioClient _client;
     private readonly string _bucketName;
 
-    public FileStorage(MinioClient minioClient, IOptions<MinioOptions> options) 
+    public MinioFileStorage(MinioClient minioClient, IOptions<MinioOptions> options) 
     {
         _client = minioClient;
         _bucketName = options.Value.BucketName;
@@ -65,5 +65,22 @@ public class FileStorage : IFileStorage
         await _client.RemoveObjectAsync(removeObjectArgs);
         
         return Result.Success();
+    }
+
+    public async Task<Result<string>> GetContentAsync(string fileName)
+    {
+        try
+        {
+            var streamResult = await DownloadFileAsync(fileName);
+            if (!streamResult.IsSuccess)
+                return Result<string>.Error(string.Join(", ", streamResult.Errors));
+
+            using var reader = new StreamReader(streamResult.Value);
+            return Result<string>.Success(await reader.ReadToEndAsync());
+        }
+        catch (Exception ex)
+        {
+            return Result<string>.Error(ex.Message);
+        }
     }
 }

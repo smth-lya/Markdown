@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Markdown.Implementation.Parsers
 {
-    public class MarkdownParser : IMarkdownParser
+    public class MarkdownToHtmlParser : IMarkdownParser
     {
         public ISyntaxTree Parse(string sourceMD)
         {

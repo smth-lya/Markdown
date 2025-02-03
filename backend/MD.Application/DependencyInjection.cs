@@ -18,6 +18,11 @@ public static class DependencyInjection
         services.AddScoped<IJwtRefreshTokenStorage, CacheRefreshTokenStorage>();
         services.AddScoped<IJwtService, JwtService>();
 
+        services.AddScoped<IDocumentService, DocumentService>();
+        services.AddScoped<IPermissionService, PermissionService>();
+
+        services.AddScoped<ICurrentUser, CurrentUser>();
+
         services.Configure<JwtOptions>(opts =>
         {
             configuration.GetSection("JwtOptions").Bind(opts);

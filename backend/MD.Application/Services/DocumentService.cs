@@ -9,6 +9,8 @@ public interface IDocumentService
     Task<Result<Guid>> UploadDocumentAsync(IFormFile file);
     Task<Result<(Stream, string)>> DownloadDocumentAsync(Guid id);
     Task<Result> DeleteDocumentAsync(Guid id);
+    
+    Task<Result<string>> GetDocumentContentAsync(Guid id); 
 }
 
 public class DocumentService : IDocumentService
@@ -20,6 +22,18 @@ public class DocumentService : IDocumentService
     {
         _documentRepository = documentRepository;
         _fileStorage = fileStorage;
+    }
+
+    public async Task<Result<string>> GetDocumentContentAsync(Guid id)
+    {
+        var documentResult = await _documentRepository.GetByIdAsync(id);
+        if (!documentResult.IsSuccess)
+            return Result<string>.Error(string.Join(", ", documentResult.Errors));
+
+        var contentResult = await _fileStorage.GetContentAsync(documentResult.Value.FileName);
+        return contentResult.IsSuccess
+            ? Result<string>.Success(contentResult.Value)
+            : Result<string>.Error(string.Join(", ", contentResult.Errors));
     }
 
     public async Task<Result<Guid>> UploadDocumentAsync(IFormFile file)

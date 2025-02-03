@@ -2,5 +2,5 @@
 
 public interface IMarkdownProcessor
 {
-    void ConvertToHtml(string markdownm, out string htmlCode);
+    string ConvertToHtml(string markdownm);
 }

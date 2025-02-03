@@ -25,7 +25,7 @@ builder.WebHost.ConfigureKestrel(options =>
 {
     options.Limits.MaxRequestBodySize = 5 * 1024 * 1024;
 });
-
+builder.Configuration.AddEnvironmentVariables();
 builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection("Minio"));
 
 builder.Services.AddSingleton<MinioClient>(provider =>
@@ -36,6 +36,12 @@ builder.Services.AddSingleton<MinioClient>(provider =>
         .WithCredentials(settings.AccessKey, settings.SecretKey)
         .Build();
 });
+
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddSwaggerGen();
+
+
 
 builder.Services
     .AddApplication(builder.Configuration)
@@ -56,7 +62,7 @@ builder.Services.Configure<JsonOptions>(options =>
     options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
 });
 
-builder.Services.ConfigureOptions<JwtBearerConfigureOptions>();
+builder.Services.AddHttpContextAccessor().ConfigureOptions<JwtBearerConfigureOptions>();
 
 var app = builder.Build();
 

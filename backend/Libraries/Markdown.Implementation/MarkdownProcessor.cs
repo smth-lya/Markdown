@@ -1,14 +1,22 @@
-﻿using Markdown.Core.Processors;
-using Markdown.Implementation.Parsers;
+﻿using Markdown.Core.Parsers;
+using Markdown.Core.Processors;
 
 namespace Markdown.Implementation;
 
 public class MarkdownProcessor : IMarkdownProcessor
 {
-    public void ConvertToHtml(string markdownm, out string htmlCode)
+    private readonly IMarkdownParser _parser;
+
+    public MarkdownProcessor(IMarkdownParser parser)
     {
-        var parser = new MarkdownParser();
-        var tree = parser.Parse(markdownm);
-        htmlCode = tree.Root.Render();
+        _parser = parser;
+    }
+
+    public string ConvertToHtml(string markdownm)
+    {
+        var tree = _parser.Parse(markdownm);
+        var htmlCode = tree.Root.Render();
+
+        return htmlCode;
     }
 }
