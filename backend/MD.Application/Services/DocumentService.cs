@@ -73,7 +73,7 @@ public class DocumentService : IDocumentService
         var result = await _documentRepository.GetByIdAsync(id);
         if (!result.IsSuccess)
             return Result.Error(string.Join(", ", result.Errors));
-        _logger.LogInformation("aaaaaaaaaaaaaaddddddddddddddddd");
+
         var document = result.Value;
         Console.WriteLine(result.Value.FileName);
         var streamResult = await _fileStorage.DownloadFileAsync(document.FileName);
