@@ -17,7 +17,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
       ConnectionStrings__PostgresConnection: ${DB_CONNECTION_STRING}
-      Minio__Endpoint: http://minio:9000  
+      Minio__Endpoint: minio:9000  
       Minio__AccessKey: ${MINIO_ROOT_USER}
       Minio__SecretKey: ${MINIO_ROOT_PASSWORD}
       Minio__BucketName: ${MINIO_BUCKET_NAME}
@@ -36,7 +36,7 @@ services:
   #     context: ./frontend
   #     dockerfile: Dockerfile
   #   environment:
-  #     - REACT_APP_API_URL=${REACT_APP_API_URL}
+  #     - VITE_API_URL=${VITE_API_URL}
   #   ports:
   #     - "3000:3000"
   #   depends_on:

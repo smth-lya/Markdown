@@ -1,15 +1,15 @@
 FROM node:18-alpine
 
 WORKDIR /app
-
 COPY package*.json ./
-
-RUN npm install
-
+RUN npm ci
 COPY . .
 
+# Установите serve для обслуживания статики
+RUN npm install -g serve
+
+# Соберите проект
 RUN npm run build
 
 EXPOSE 3000
-
-CMD ["npm", "start"]
+CMD ["serve", "-s", "dist", "-l", "3000"]

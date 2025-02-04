@@ -46,7 +46,7 @@ public class MinioFileStorage : IFileStorage
     {
         var stream = new MemoryStream();
         var getObjectArgs = new GetObjectArgs()
-            .WithBucket(fileName)
+            .WithBucket(_bucketName)
             .WithObject(fileName)
             .WithCallbackStream(async (s, ct) => await s.CopyToAsync(stream));
 

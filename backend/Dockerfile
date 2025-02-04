@@ -12,6 +12,9 @@ ENV PATH="${PATH}:/root/.dotnet/tools"
 
 WORKDIR /src
 
+COPY Libraries/Markdown.Core /app/Libraries/Markdown.Core
+COPY Libraries/Markdown.Implementation /app/Libraries/Markdown.Implementation
+
 COPY ["MD.WebAPI/MD.WebAPI.csproj", "MD.WebAPI/"]
 COPY ["MD.Application/MD.Application.csproj", "MD.Application/"]
 COPY ["MD.Domain/MD.Domain.csproj", "MD.Domain/"]

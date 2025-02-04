@@ -13,9 +13,10 @@ using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Minio;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.AddControllers();
 builder.Host.UseSerilog((context, config) =>
 {
     config.ReadFrom.Configuration(context.Configuration);
@@ -34,14 +35,11 @@ builder.Services.AddSingleton<MinioClient>(provider =>
     return (MinioClient)new MinioClient()
         .WithEndpoint(settings.Endpoint)
         .WithCredentials(settings.AccessKey, settings.SecretKey)
+        .WithSSL(false)
         .Build();
 });
 
 builder.Services.AddHttpContextAccessor();
-
-builder.Services.AddSwaggerGen();
-
-
 
 builder.Services
     .AddApplication(builder.Configuration)
@@ -75,9 +73,13 @@ app.UseCookiePolicy(new CookiePolicyOptions
     Secure = CookieSecurePolicy.Always
 });
 
+app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapGet("/", () => "9 ASP Hello World!" + builder.Configuration.GetConnectionString("PostgresConnection"));
 app.MapGet("user/add", async () =>
     "10 ASP Hello World!" + 

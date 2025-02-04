@@ -1,4 +1,8 @@
-﻿using MD.Domain;
+﻿using Markdown.Core.Parsers;
+using Markdown.Core.Processors;
+using Markdown.Implementation;
+using Markdown.Implementation.Parsers;
+using MD.Domain;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,10 +22,14 @@ public static class DependencyInjection
         services.AddScoped<IJwtRefreshTokenStorage, CacheRefreshTokenStorage>();
         services.AddScoped<IJwtService, JwtService>();
 
+        services.AddScoped<IUserService, UserService>();
         services.AddScoped<IDocumentService, DocumentService>();
         services.AddScoped<IPermissionService, PermissionService>();
 
         services.AddScoped<ICurrentUser, CurrentUser>();
+
+        services.AddScoped<IMarkdownProcessor, MarkdownProcessor>();
+        services.AddScoped<IMarkdownParser, MarkdownToHtmlParser>();
 
         services.Configure<JwtOptions>(opts =>
         {
