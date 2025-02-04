@@ -17,7 +17,6 @@ public class User
     [SetsRequiredMembers]
     public User(string email, string passwordHash)
     {
-        Id = Guid.NewGuid();
         Email = email;
         PasswordHash = passwordHash;
     }

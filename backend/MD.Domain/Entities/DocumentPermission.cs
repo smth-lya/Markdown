@@ -1,4 +1,6 @@
-﻿namespace MD.Domain;
+﻿using System.Text.Json.Serialization;
+
+namespace MD.Domain;
 
 public class DocumentPermission
 {
@@ -7,6 +9,7 @@ public class DocumentPermission
     public Guid UserId { get; set; }
     public AccessLevel AccessLevel { get; set; }
 
+    [JsonIgnore]
     public Document Document { get; set; }
     public User User { get; set; }
 }

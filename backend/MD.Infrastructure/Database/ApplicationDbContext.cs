@@ -13,92 +13,56 @@ public class ApplicationDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.HasPostgresExtension("pgcrypto");
-
-        modelBuilder.Entity<User>(entity =>
-        {
-            entity.HasKey(u => u.Id);
-
-            entity.Property(u => u.Id)
-                .HasDefaultValueSql("gen_random_uuid()");
-
-            entity.Property(u => u.PasswordHash)
-            .IsRequired()
-            .HasMaxLength(255);
-
-            entity.Property(u => u.Email)
-                .IsRequired()
-                .HasMaxLength(255);
-
-            entity.HasIndex(u => u.Email)
-                .IsUnique();
-        });
+        base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<Document>(entity =>
         {
             entity.HasKey(d => d.Id);
-
-            entity.HasIndex(d => d.CreatedAt);
-            entity.HasIndex(d => d.OriginalName);
-            
-            entity.Property(d => d.Id)
-                .HasDefaultValueSql("gen_random_uuid()");
-
-            entity.Property(d => d.FileName)
-                .IsRequired()
-                .HasMaxLength(36); // Guid.ToString() length
-
-            entity.Property(d => d.OriginalName)
-                   .IsRequired()
-                   .HasMaxLength(255);
-
-            entity.Property(d => d.Content)
-                .IsRequired()
-                .HasColumnType("text");
-
-            entity.Property(d => d.CreatedAt)
-                .HasDefaultValueSql("NOW()");
+            entity.Property(d => d.FileName).IsRequired();
+            entity.Property(d => d.OriginalName).IsRequired();
+            entity.Property(d => d.CreatedAt).IsRequired();
 
             entity.HasOne(d => d.Owner)
-                .WithMany(u => u.OwnedDocuments)
-                .HasForeignKey(d => d.OwnerId)
-                .OnDelete(DeleteBehavior.Cascade);
+                  .WithMany(u => u.OwnedDocuments)
+                  .HasForeignKey(d => d.OwnerId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(d => d.Permissions)
+                  .WithOne(dp => dp.Document)
+                  .HasForeignKey(dp => dp.DocumentId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<DocumentPermission>(entity =>
         {
             entity.HasKey(dp => dp.Id);
 
-            entity.Property(dp => dp.Id)
-                .HasDefaultValueSql("gen_random_uuid()");
-
             entity.HasOne(dp => dp.Document)
-                .WithMany(d => d.Permissions)
-                .HasForeignKey(dp => dp.DocumentId)
-                .OnDelete(DeleteBehavior.Cascade);
+                  .WithMany(d => d.Permissions)
+                  .HasForeignKey(dp => dp.DocumentId)
+                  .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(dp => dp.User)
-                .WithMany(u => u.Permissions)
-                .HasForeignKey(dp => dp.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(dp => new { dp.DocumentId, dp.UserId })
-                .IsUnique();
+                  .WithMany(u => u.Permissions)
+                  .HasForeignKey(dp => dp.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
-        base.OnModelCreating(modelBuilder);
-    }
-
-    public override int SaveChanges()
-    {
-        foreach (var entry in ChangeTracker.Entries<Document>())
+        modelBuilder.Entity<User>(entity =>
         {
-            if (entry.State == EntityState.Modified)
-            {
-                entry.Property("UpdatedAt").CurrentValue = DateTime.UtcNow;
-            }
-        }
+            entity.HasKey(u => u.Id);
+            entity.Property(u => u.Email).IsRequired();
+            entity.Property(u => u.PasswordHash).IsRequired();
 
-        return base.SaveChanges();
+            entity.HasMany(u => u.OwnedDocuments)
+                  .WithOne(d => d.Owner)
+                  .HasForeignKey(d => d.OwnerId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(u => u.Permissions)
+                  .WithOne(dp => dp.User)
+                  .HasForeignKey(dp => dp.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }

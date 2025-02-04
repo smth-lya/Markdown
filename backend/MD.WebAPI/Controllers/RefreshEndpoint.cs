@@ -1,5 +1,6 @@
 ﻿using MD.Application;
 using MD.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MD.WebAPI;
@@ -18,7 +19,7 @@ public sealed class RefreshEndpoint : ControllerBase
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh(CancellationToken cancellationToken)
     {
-        if (Request.Cookies.TryGetValue(JwtTokenConstants.RefreshTokenType, out var refreshToken) || string.IsNullOrEmpty(refreshToken))
+        if (!Request.Cookies.TryGetValue(JwtTokenConstants.RefreshTokenType, out var refreshToken) || string.IsNullOrEmpty(refreshToken))
             return Unauthorized();
 
         var jwtToken = new JwtToken(refreshToken);

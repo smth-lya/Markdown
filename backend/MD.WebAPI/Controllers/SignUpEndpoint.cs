@@ -23,7 +23,6 @@ public sealed class SignUpEndpoint : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> CreateUser([FromBody] SignUpRequest request, CancellationToken cancellationToken)
     {
-        Console.WriteLine("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
         var validator = new SingUpRequestValidator(_rulePredicates);
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
 

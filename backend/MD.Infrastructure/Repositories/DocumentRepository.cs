@@ -1,16 +1,19 @@
 ﻿using Ardalis.Result;
 using MD.Domain;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace MD.Infrastructure;
 
 public class DocumentRepository : IDocumentRepository
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly ILogger<DocumentRepository> _logger;
 
-    public DocumentRepository(ApplicationDbContext dbContext)
+    public DocumentRepository(ApplicationDbContext dbContext, ILogger<DocumentRepository> logger)
     {
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     public async Task<Result> AddAsync(Document document)
@@ -22,6 +25,7 @@ public class DocumentRepository : IDocumentRepository
         }
 
         _dbContext.Add(document);
+
         var written = await _dbContext.SaveChangesAsync();
 
         return written > 0 ? Result.Success() : Result.Error();

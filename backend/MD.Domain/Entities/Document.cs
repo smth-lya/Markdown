@@ -5,7 +5,6 @@ public class Document
     public Guid Id { get; set; } = Guid.NewGuid();
     public string FileName { get; set; }
     public string OriginalName { get; set; }
-    public string Content { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public Guid OwnerId { get; set; }

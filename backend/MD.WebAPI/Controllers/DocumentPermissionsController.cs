@@ -2,9 +2,11 @@
 using MD.Application;
 using MD.WebAPI;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 [ApiController]
-[Route("api/documents/{documentId}/permissions")]
+[Authorize]
+[Route("api/documents")]
 public class DocumentPermissionsController : ControllerBase
 {
     private readonly IPermissionService _permissionService;
@@ -18,16 +20,14 @@ public class DocumentPermissionsController : ControllerBase
         _currentUser = currentUser;
     }
 
-    [HttpPost("share/{id}")]
-    public async Task<IActionResult> ShareDocument(
-        Guid id,
-        [FromBody] ShareRequest request)
+    [HttpPost("share")]
+    public async Task<IActionResult> ShareDocument([FromBody] ShareRequest request)
     {
-        if (!await _permissionService.CheckAccessAsync(id, _currentUser.Id, AccessLevel.Read))
+        if (!await _permissionService.CheckAccessAsync(request.DocumentId, _currentUser.Id, AccessLevel.Edit))
             return Forbid();
 
         var result = await _permissionService.GrantAccessAsync(
-            id,
+            request.DocumentId,
             request.UserId,
             request.AccessLevel
         );
@@ -38,17 +38,17 @@ public class DocumentPermissionsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetPermissions(Guid documentId)
     {
-        if (!await _permissionService.CheckAccessAsync(documentId, _currentUser.Id, AccessLevel.Read))
+        if (!await _permissionService.CheckAccessAsync(documentId, _currentUser.Id, AccessLevel.Edit))
             return Forbid();
 
         var permissions = await _permissionService.GetDocumentPermissionsAsync(documentId);
         return Ok(permissions);
     }
 
-    [HttpDelete("{userId}")]
+    [HttpDelete]
     public async Task<IActionResult> RevokePermission(Guid documentId, Guid userId)
     {
-        if (!await _permissionService.CheckAccessAsync(documentId, _currentUser.Id, AccessLevel.Read))
+        if (!await _permissionService.CheckAccessAsync(documentId, _currentUser.Id, AccessLevel.Edit))
             return Forbid();
 
         await _permissionService.RevokeAccessAsync(documentId, userId);

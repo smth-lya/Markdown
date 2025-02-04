@@ -1,0 +1,105 @@
+{
+  "info": {
+    "_postman_id": "b1e5e3a8-1234-5678-90ab-cdef01234567",
+    "name": "Documents API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Upload Document",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "file", "type": "file", "src": "" }
+          ]
+        },
+        "url": { "raw": "{{baseUrl}}/api/documents/upload", "host": ["{{baseUrl}}"], "path": ["api", "documents", "upload"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Download Document",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+        ],
+        "url": { "raw": "{{baseUrl}}/api/documents/download/{{documentId}}", "host": ["{{baseUrl}}"], "path": ["api", "documents", "download", "{{documentId}}"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Document",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+        ],
+        "url": { "raw": "{{baseUrl}}/api/documents/delete/{{documentId}}", "host": ["{{baseUrl}}"], "path": ["api", "documents", "delete", "{{documentId}}"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Share Document",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+          { "key": "Content-Type", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"documentId\": \"{{documentId}}\",\n    \"userId\": \"{{userId}}\",\n    \"accessLevel\": \"Edit\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/documents/share", "host": ["{{baseUrl}}"], "path": ["api", "documents", "share"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Permissions",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/documents?documentId={{documentId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "documents"],
+          "query": [{ "key": "documentId", "value": "{{documentId}}" }]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Revoke Permission",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/documents?documentId={{documentId}}&userId={{userId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "documents"],
+          "query": [
+            { "key": "documentId", "value": "{{documentId}}" },
+            { "key": "userId", "value": "{{userId}}" }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "token", "value": "" },
+    { "key": "documentId", "value": "" },
+    { "key": "userId", "value": "" }
+  ]
+}

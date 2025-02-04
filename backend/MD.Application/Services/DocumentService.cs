@@ -1,6 +1,7 @@
 ﻿using Ardalis.Result;
 using MD.Domain;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace MD.Application;
 
@@ -17,11 +18,15 @@ public class DocumentService : IDocumentService
 {
     private readonly IDocumentRepository _documentRepository;
     private readonly IFileStorage _fileStorage;
+    private readonly ICurrentUser _currentUser;
+    private readonly ILogger<DocumentService> _logger;
 
-    public DocumentService(IDocumentRepository documentRepository, IFileStorage fileStorage)
+    public DocumentService(IDocumentRepository documentRepository, IFileStorage fileStorage, ICurrentUser currentUser, ILogger<DocumentService> logger)
     {
         _documentRepository = documentRepository;
         _fileStorage = fileStorage;
+        _currentUser = currentUser;
+        _logger = logger;
     }
 
     public async Task<Result<string>> GetDocumentContentAsync(Guid id)
@@ -41,8 +46,9 @@ public class DocumentService : IDocumentService
         var result = await _fileStorage.UploadFileAsync(file);
 
         if (!result.IsSuccess)
+        {
             return Result.Error(string.Join(", ", result.Errors));
-
+        }
         var fileName = result.Value;
 
         var document = new Document()
@@ -50,12 +56,14 @@ public class DocumentService : IDocumentService
             Id = Guid.NewGuid(),
             FileName = fileName,
             OriginalName = file.FileName,
+            OwnerId = _currentUser.Id,
         };
 
         result = await _documentRepository.AddAsync(document);
 
         if (!result.IsSuccess)
             return Result.Error(string.Join(", ", result.Errors));
+        _logger.LogInformation(new string('I', 100));
 
         return document.Id;
     }
@@ -65,10 +73,11 @@ public class DocumentService : IDocumentService
         var result = await _documentRepository.GetByIdAsync(id);
         if (!result.IsSuccess)
             return Result.Error(string.Join(", ", result.Errors));
-
+        _logger.LogInformation("aaaaaaaaaaaaaaddddddddddddddddd");
         var document = result.Value;
-
+        Console.WriteLine(result.Value.FileName);
         var streamResult = await _fileStorage.DownloadFileAsync(document.FileName);
+        _logger.LogInformation("aaaaaaaaaaaaaaddddddddddddddddFFFFFFFFFFFFFFFd");
 
         if (!streamResult.IsSuccess)
             return Result.Error(string.Join(", ", streamResult.Errors));

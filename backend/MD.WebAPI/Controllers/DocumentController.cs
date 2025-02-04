@@ -31,7 +31,7 @@ public class DocumentsController : ControllerBase
     }
 
     [HttpPost("upload")]
-    public async Task<IActionResult> UploadDocument(IFormFile file)
+    public async Task<IActionResult> UploadDocument([FromForm] IFormFile file)
     {
         var uploadingResult = await _documentService.UploadDocumentAsync(file);
 
@@ -78,4 +78,4 @@ public class DocumentsController : ControllerBase
     }
 }
 
-public record ShareRequest(Guid UserId, AccessLevel AccessLevel);
+public record ShareRequest(Guid DocumentId, Guid UserId, AccessLevel AccessLevel);

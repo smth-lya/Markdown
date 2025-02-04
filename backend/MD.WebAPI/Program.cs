@@ -1,34 +1,38 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using MD.Application;
+using MD.Infrastructure;
 using MD.WebAPI;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.CookiePolicy;
-using Microsoft.AspNetCore.Http.Json;
-using System.Text.Json;
-using Serilog;
-using MD.Infrastructure;
-using Microsoft.EntityFrameworkCore;
-using MD.Domain;
-using System;
-using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Options;
 using Minio;
-using Microsoft.OpenApi.Models;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllers();
+
+// Конфигурация Serilog
 builder.Host.UseSerilog((context, config) =>
 {
     config.ReadFrom.Configuration(context.Configuration);
 });
 
+// Конфигурация Kestrel
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.Limits.MaxRequestBodySize = 5 * 1024 * 1024;
+    options.Limits.MaxRequestBodySize = 5 * 1024 * 1024; // 5 MB
 });
-builder.Configuration.AddEnvironmentVariables();
-builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection("Minio"));
 
+// Конфигурация JSON
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+});
+
+// Конфигурация Minio
+builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection("Minio"));
 builder.Services.AddSingleton<MinioClient>(provider =>
 {
     var settings = provider.GetRequiredService<IOptions<MinioOptions>>().Value;
@@ -39,12 +43,13 @@ builder.Services.AddSingleton<MinioClient>(provider =>
         .Build();
 });
 
-builder.Services.AddHttpContextAccessor();
+// Конфигурация загрузки файлов
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 100 * 1024 * 1024; // 100 MB
+});
 
-builder.Services
-    .AddApplication(builder.Configuration)
-    .AddInfrastructure(builder.Configuration, builder.Environment);
-
+// Конфигурация аутентификации и авторизации
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme);
 
@@ -54,21 +59,29 @@ builder.Services.AddAuthorizationBuilder()
         policy.RequireClaim(JwtTokenConstants.TokenTypeClaimName, JwtTokenConstants.AccessTokenType);
     });
 
+// Регистрация сервисов приложения и инфраструктуры
+builder.Services
+    .AddApplication(builder.Configuration)
+    .AddInfrastructure(builder.Configuration, builder.Environment);
 
-builder.Services.Configure<JsonOptions>(options =>
-{
-    options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
-});
+// Регистрация дополнительных сервисов
+builder.Services.AddHttpContextAccessor();
+builder.Services.ConfigureOptions<JwtBearerConfigureOptions>();
 
-builder.Services.AddHttpContextAccessor().ConfigureOptions<JwtBearerConfigureOptions>();
+builder.Configuration.AddEnvironmentVariables();
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
 
 app.UseStaticFiles();
 
 app.UseCookiePolicy(new CookiePolicyOptions
 {
-    MinimumSameSitePolicy = SameSiteMode.Strict, 
+    MinimumSameSitePolicy = SameSiteMode.Strict,
     HttpOnly = HttpOnlyPolicy.Always,
     Secure = CookieSecurePolicy.Always
 });
@@ -77,75 +90,9 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-app.MapGet("/", () => "9 ASP Hello World!" + builder.Configuration.GetConnectionString("PostgresConnection"));
-app.MapGet("user/add", async () =>
-    "10 ASP Hello World!" + 
-      
-    await app.Services.CreateScope().ServiceProvider.GetRequiredService<IUserRepository>()
-    .AddAsync(new User($"1@{Random.Shared.Next(0, 10000)}email", $"{Random.Shared.Next()}")));
-
-//app.MapGet("/add", async () =>
-//    "10 ASP Hello World!" + 
-      
-//    await app.Services.CreateScope().ServiceProvider.<IUserRepository>()
-//    .AddAsync(new User($"1@{Random.Shared.Next(0, 10000)}email", $"{Random.Shared.Next()}")));
-
-
-
-app.MapGet("/read", async () => 
-    "10 ASP Hello World!" + 
-    (await app.Services.CreateScope().ServiceProvider.GetRequiredService<IUserRepository>().GetUserByEmailAsync($"1@{Random.Shared.Next(0, 10000)}email"))
-    .Value?.Email);
-
-app.MapGet("/users", async (ApplicationDbContext dbcontext) =>
-{
-    var users = await dbcontext.Users
-            .Select(u => $"Id: {u.Id} | Email: {u.Email} | PasswordHash: {u.PasswordHash}")
-            .ToListAsync();
-
-    string result = string.Join("\n", users);
-
-    return string.IsNullOrEmpty(result) ? Results.NotFound("No users found") : Results.Text(result);
-});
-
-app.MapGet("/connection", (ApplicationDbContext dbContext) =>
-{
-    var connectionString = dbContext.Database.GetDbConnection().ConnectionString;
-    return Results.Ok($"Connected to: {connectionString}");
-});
-
-app.MapGet("/home", async (context) =>
-{
-    var file = await File.ReadAllBytesAsync("wwwroot/index.html");
-
-    context.Response.ContentType = "text/html;charset=utf-8";
-    context.Response.ContentLength = file.Length;
-
-    await context.Response.BodyWriter.WriteAsync(file);
-});
-
-app.MapGet("/md-converter", async (context) =>
-{
-    var file = await File.ReadAllBytesAsync("wwwroot/converter.html");
-
-    context.Response.ContentType = "text/html;charset=utf-8";
-    context.Response.ContentLength = file.Length;
-
-    await context.Response.BodyWriter.WriteAsync(file);
-});
-
-app.MapGet("/file-storage", async (context) =>
-{
-    var file = await File.ReadAllBytesAsync("wwwroot/storage.html");
-
-    context.Response.ContentType = "text/html;charset=utf-8";
-    context.Response.ContentLength = file.Length;
-
-    await context.Response.BodyWriter.WriteAsync(file);
-});
 
 app.Run();
-return;

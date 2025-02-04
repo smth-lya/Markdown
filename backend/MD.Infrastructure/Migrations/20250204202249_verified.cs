@@ -5,7 +5,7 @@
 namespace MD.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class init6 : Migration
+    public partial class verified : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

@@ -31,8 +31,8 @@ public static class DependencyInjection
                     options.EnableSensitiveDataLogging();
                 }
 
-                var dataSourceBuilder = new NpgsqlDataSourceBuilder("Host=db;Port=5432;Database=markdownapp;Username=postgres;Password=postgres");
-                //var dataSourceBuilder = new NpgsqlDataSourceBuilder(configuration.GetConnectionString("PostgresConnection"));
+                //var dataSourceBuilder = new NpgsqlDataSourceBuilder("Host=db;Port=5432;Database=markdownapp;Username=postgres;Password=postgres");
+                var dataSourceBuilder = new NpgsqlDataSourceBuilder(configuration.GetConnectionString("PostgresConnection"));
                 dataSourceBuilder.EnableDynamicJson();
                 var dataSource = dataSourceBuilder.Build();
 
